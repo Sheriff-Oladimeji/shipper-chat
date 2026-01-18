@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
-import { pusherServer } from "@/lib/pusher";
+import { getPusherServer } from "@/lib/pusher";
 
 export async function POST(request: NextRequest) {
   const currentUser = await getCurrentUser();
@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
       },
     };
 
-    const auth = pusherServer.authorizeChannel(socketId, channel, presenceData);
+    const auth = getPusherServer().authorizeChannel(socketId, channel, presenceData);
     return NextResponse.json(auth);
   }
 
@@ -54,6 +54,6 @@ export async function POST(request: NextRequest) {
     // For now, we'll let it through as the API routes already verify this
   }
 
-  const auth = pusherServer.authorizeChannel(socketId, channel);
+  const auth = getPusherServer().authorizeChannel(socketId, channel);
   return NextResponse.json(auth);
 }

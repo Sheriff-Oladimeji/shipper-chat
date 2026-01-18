@@ -39,6 +39,7 @@ export function useConversations() {
   } = useQuery({
     queryKey: ["conversations"],
     queryFn: fetchConversations,
+    staleTime: 30 * 1000, // 30 seconds
   });
 
   // Sync with store

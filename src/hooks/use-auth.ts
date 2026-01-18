@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useChatStore } from "@/stores/chat-store";
@@ -38,12 +39,15 @@ export function useAuth() {
     queryKey: ["currentUser"],
     queryFn: fetchCurrentUser,
     retry: false,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
-  // Update store when user changes
-  if (user) {
-    setCurrentUser(user as any);
-  }
+  // Update store when user changes - use useEffect to avoid render loop
+  useEffect(() => {
+    if (user) {
+      setCurrentUser(user as any);
+    }
+  }, [user, setCurrentUser]);
 
   const logoutMutation = useMutation({
     mutationFn: logoutUser,

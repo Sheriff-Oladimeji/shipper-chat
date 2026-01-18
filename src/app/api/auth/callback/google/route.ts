@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getGoogleTokens, getGoogleUserInfo, createTokens, setAuthCookies } from "@/lib/auth";
+import { getGoogleTokens, getGoogleUserInfo, createTokens } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 
 export async function GET(request: NextRequest) {
@@ -71,11 +71,26 @@ export async function GET(request: NextRequest) {
     // Create JWT tokens
     const { accessToken, refreshToken } = await createTokens(user.id, user.email);
 
-    // Set cookies
-    await setAuthCookies(accessToken, refreshToken);
+    // Redirect to chat with cookies set on response
+    const response = NextResponse.redirect(new URL("/", request.url));
 
-    // Redirect to chat
-    return NextResponse.redirect(new URL("/", request.url));
+    response.cookies.set("access_token", accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 15 * 60, // 15 minutes
+      path: "/",
+    });
+
+    response.cookies.set("refresh_token", refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 7 * 24 * 60 * 60, // 7 days
+      path: "/",
+    });
+
+    return response;
   } catch (err) {
     console.error("Google OAuth error:", err);
     return NextResponse.redirect(

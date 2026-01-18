@@ -1,26 +1,52 @@
 import Pusher from "pusher";
 import PusherClient from "pusher-js";
 
-// Server-side Pusher instance
-export const pusherServer = new Pusher({
-  appId: process.env.PUSHER_APP_ID!,
-  key: process.env.PUSHER_KEY!,
-  secret: process.env.PUSHER_SECRET!,
-  cluster: process.env.PUSHER_CLUSTER!,
-  useTLS: true,
-});
+// Server-side Pusher instance (lazy initialization)
+let pusherServerInstance: Pusher | null = null;
+
+export function getPusherServer(): Pusher {
+  if (!pusherServerInstance) {
+    if (!process.env.PUSHER_APP_ID || !process.env.PUSHER_KEY || !process.env.PUSHER_SECRET) {
+      throw new Error("Pusher server credentials not configured");
+    }
+    pusherServerInstance = new Pusher({
+      appId: process.env.PUSHER_APP_ID,
+      key: process.env.PUSHER_KEY,
+      secret: process.env.PUSHER_SECRET,
+      cluster: process.env.PUSHER_CLUSTER || "us2",
+      useTLS: true,
+    });
+  }
+  return pusherServerInstance;
+}
+
+// For backwards compatibility
+export const pusherServer = {
+  trigger: async (...args: Parameters<Pusher["trigger"]>) => {
+    try {
+      return await getPusherServer().trigger(...args);
+    } catch (error) {
+      console.error("Pusher trigger error:", error);
+    }
+  },
+};
 
 // Client-side Pusher instance (singleton)
 let pusherClientInstance: PusherClient | null = null;
 
-export function getPusherClient(): PusherClient {
+export function getPusherClient(): PusherClient | null {
   if (typeof window === "undefined") {
-    throw new Error("Pusher client can only be used in the browser");
+    return null;
+  }
+
+  if (!process.env.NEXT_PUBLIC_PUSHER_KEY) {
+    console.warn("Pusher client key not configured");
+    return null;
   }
 
   if (!pusherClientInstance) {
-    pusherClientInstance = new PusherClient(process.env.NEXT_PUBLIC_PUSHER_KEY!, {
-      cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER!,
+    pusherClientInstance = new PusherClient(process.env.NEXT_PUBLIC_PUSHER_KEY, {
+      cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER || "us2",
       authEndpoint: "/api/pusher/auth",
     });
   }

@@ -10,7 +10,7 @@ import type { Channel } from "pusher-js";
 
 export function usePusher(userId: string | undefined) {
   const queryClient = useQueryClient();
-  const { addMessage, setUserTyping, updateMessage } = useChatStore();
+  const { addMessage } = useChatStore();
   const pusherRef = useRef<PusherClient | null>(null);
   const userChannelRef = useRef<Channel | null>(null);
 
@@ -18,6 +18,8 @@ export function usePusher(userId: string | undefined) {
     if (!userId) return;
 
     const pusher = getPusherClient();
+    if (!pusher) return; // Pusher not configured
+
     pusherRef.current = pusher;
 
     // Subscribe to user's personal channel
@@ -31,7 +33,7 @@ export function usePusher(userId: string | undefined) {
     });
 
     return () => {
-      if (userChannelRef.current) {
+      if (userChannelRef.current && pusher) {
         userChannelRef.current.unbind_all();
         pusher.unsubscribe(getUserChannel(userId));
       }
@@ -47,11 +49,15 @@ export function useConversationChannel(conversationId: string | null) {
   const queryClient = useQueryClient();
   const { addMessage, setUserTyping, updateMessage } = useChatStore();
   const channelRef = useRef<Channel | null>(null);
+  const pusherRef = useRef<PusherClient | null>(null);
 
   useEffect(() => {
     if (!conversationId) return;
 
     const pusher = getPusherClient();
+    if (!pusher) return; // Pusher not configured
+
+    pusherRef.current = pusher;
     const channel = pusher.subscribe(getConversationChannel(conversationId));
     channelRef.current = channel;
 
@@ -76,9 +82,9 @@ export function useConversationChannel(conversationId: string | null) {
     });
 
     return () => {
-      if (channelRef.current) {
+      if (channelRef.current && pusherRef.current) {
         channelRef.current.unbind_all();
-        pusher.unsubscribe(getConversationChannel(conversationId));
+        pusherRef.current.unsubscribe(getConversationChannel(conversationId));
       }
     };
   }, [conversationId, addMessage, setUserTyping, updateMessage, queryClient]);
@@ -86,11 +92,15 @@ export function useConversationChannel(conversationId: string | null) {
   const sendTypingIndicator = useCallback(
     async (isTyping: boolean) => {
       if (!conversationId) return;
-      await fetch("/api/typing", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ conversationId, isTyping }),
-      });
+      try {
+        await fetch("/api/typing", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ conversationId, isTyping }),
+        });
+      } catch (error) {
+        // Ignore typing indicator errors
+      }
     },
     [conversationId]
   );
