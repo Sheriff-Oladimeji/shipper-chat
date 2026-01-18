@@ -15,13 +15,14 @@ import {
   PinOff,
   Trash2,
 } from "lucide-react";
-import { useState, useRef, useCallback } from "react";
+import { useState, useCallback } from "react";
 import {
   ContextMenu,
   ContextMenuContent,
   ContextMenuItem,
   ContextMenuSeparator,
 } from "@/components/ui/context-menu";
+import { motion, useMotionValue, useTransform, useAnimation, PanInfo } from "framer-motion";
 
 interface ConversationItemProps {
   id: string;
@@ -47,6 +48,7 @@ interface ConversationItemProps {
 }
 
 const SWIPE_THRESHOLD = 80;
+const ACTION_WIDTH = 80;
 
 export function ConversationItem({
   id,
@@ -70,55 +72,58 @@ export function ConversationItem({
   onPin,
   onDelete,
 }: ConversationItemProps) {
-  const [swipeOffset, setSwipeOffset] = useState(0);
-  const [isSwiping, setIsSwiping] = useState(false);
-  const touchStartX = useRef(0);
-  const touchStartY = useRef(0);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const x = useMotionValue(0);
+  const controls = useAnimation();
+
+  // Transform for left action (Archive) - appears when swiping right
+  const leftActionOpacity = useTransform(x, [0, ACTION_WIDTH / 2, ACTION_WIDTH], [0, 0.5, 1]);
+  const leftActionScale = useTransform(x, [0, ACTION_WIDTH], [0.8, 1]);
+
+  // Transform for right action (Unread) - appears when swiping left
+  const rightActionOpacity = useTransform(x, [-ACTION_WIDTH, -ACTION_WIDTH / 2, 0], [1, 0.5, 0]);
+  const rightActionScale = useTransform(x, [-ACTION_WIDTH, 0], [1, 0.8]);
 
   const timeAgo = lastMessageTime
     ? formatDistanceToNow(new Date(lastMessageTime), { addSuffix: false })
     : "";
 
-  const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    touchStartX.current = e.touches[0].clientX;
-    touchStartY.current = e.touches[0].clientY;
-    setIsSwiping(false);
-  }, []);
+  const handleDragStart = () => {
+    setIsDragging(true);
+  };
 
-  const handleTouchMove = useCallback((e: React.TouchEvent) => {
-    const deltaX = e.touches[0].clientX - touchStartX.current;
-    const deltaY = e.touches[0].clientY - touchStartY.current;
+  const handleDragEnd = async (_: unknown, info: PanInfo) => {
+    const offset = info.offset.x;
+    const velocity = info.velocity.x;
 
-    // Only swipe if horizontal movement is greater than vertical
-    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 10) {
-      setIsSwiping(true);
-      // Clamp swipe offset between -SWIPE_THRESHOLD and SWIPE_THRESHOLD
-      const clampedOffset = Math.max(
-        -SWIPE_THRESHOLD,
-        Math.min(SWIPE_THRESHOLD, deltaX)
-      );
-      setSwipeOffset(clampedOffset);
-    }
-  }, []);
+    // Determine if swipe should trigger action
+    const shouldTriggerRight = offset > SWIPE_THRESHOLD || (offset > 40 && velocity > 500);
+    const shouldTriggerLeft = offset < -SWIPE_THRESHOLD || (offset < -40 && velocity < -500);
 
-  const handleTouchEnd = useCallback(() => {
-    if (swipeOffset >= SWIPE_THRESHOLD && onArchive) {
-      // Swipe right - archive
+    if (shouldTriggerRight && onArchive) {
+      // Animate out to the right, then snap back
+      await controls.start({ x: ACTION_WIDTH + 20, transition: { duration: 0.1 } });
       onArchive(id);
-    } else if (swipeOffset <= -SWIPE_THRESHOLD && onMarkUnread) {
-      // Swipe left - mark unread
+      await controls.start({ x: 0, transition: { duration: 0.2 } });
+    } else if (shouldTriggerLeft && onMarkUnread) {
+      // Animate out to the left, then snap back
+      await controls.start({ x: -ACTION_WIDTH - 20, transition: { duration: 0.1 } });
       onMarkUnread(id);
+      await controls.start({ x: 0, transition: { duration: 0.2 } });
+    } else {
+      // Snap back to center
+      controls.start({ x: 0, transition: { type: "spring", stiffness: 500, damping: 30 } });
     }
-    setSwipeOffset(0);
-    setIsSwiping(false);
-  }, [swipeOffset, id, onArchive, onMarkUnread]);
+
+    // Small delay before re-enabling clicks
+    setTimeout(() => setIsDragging(false), 50);
+  };
 
   const handleClick = useCallback(() => {
-    if (!isSwiping) {
+    if (!isDragging) {
       onClick();
     }
-  }, [isSwiping, onClick]);
+  }, [isDragging, onClick]);
 
   const contextMenuContent = (
     <ContextMenuContent>
@@ -175,48 +180,65 @@ export function ConversationItem({
 
   return (
     <ContextMenu menu={contextMenuContent}>
-      <div ref={containerRef} className="relative overflow-hidden">
-        {/* Archive action (right swipe) */}
-        <div
-          className={cn(
-            "absolute inset-y-0 left-0 flex items-center justify-center bg-yellow-500 transition-all",
-            swipeOffset > 0 ? "opacity-100" : "opacity-0"
-          )}
-          style={{ width: Math.max(0, swipeOffset) }}
+      <div className="relative overflow-hidden">
+        {/* Left action - Archive (swipe right) */}
+        <motion.div
+          className="absolute inset-y-0 left-0 flex items-center justify-center bg-amber-500"
+          style={{
+            width: ACTION_WIDTH,
+            opacity: leftActionOpacity,
+          }}
         >
-          <Archive className="h-5 w-5 text-white" />
-        </div>
+          <motion.div
+            className="flex flex-col items-center gap-1"
+            style={{ scale: leftActionScale }}
+          >
+            <Archive className="h-5 w-5 text-white" />
+            <span className="text-xs font-medium text-white">Archive</span>
+          </motion.div>
+        </motion.div>
 
-        {/* Mark unread action (left swipe) */}
-        <div
-          className={cn(
-            "absolute inset-y-0 right-0 flex items-center justify-center bg-blue-500 transition-all",
-            swipeOffset < 0 ? "opacity-100" : "opacity-0"
-          )}
-          style={{ width: Math.max(0, -swipeOffset) }}
+        {/* Right action - Unread (swipe left) */}
+        <motion.div
+          className="absolute inset-y-0 right-0 flex items-center justify-center bg-blue-500"
+          style={{
+            width: ACTION_WIDTH,
+            opacity: rightActionOpacity,
+          }}
         >
-          {isMarkedUnread || unreadCount > 0 ? (
-            <MailOpen className="h-5 w-5 text-white" />
-          ) : (
-            <Mail className="h-5 w-5 text-white" />
-          )}
-        </div>
+          <motion.div
+            className="flex flex-col items-center gap-1"
+            style={{ scale: rightActionScale }}
+          >
+            {isMarkedUnread || unreadCount > 0 ? (
+              <>
+                <MailOpen className="h-5 w-5 text-white" />
+                <span className="text-xs font-medium text-white">Read</span>
+              </>
+            ) : (
+              <>
+                <Mail className="h-5 w-5 text-white" />
+                <span className="text-xs font-medium text-white">Unread</span>
+              </>
+            )}
+          </motion.div>
+        </motion.div>
 
-        {/* Main content */}
-        <button
+        {/* Main content - draggable */}
+        <motion.button
+          drag="x"
+          dragConstraints={{ left: -ACTION_WIDTH, right: ACTION_WIDTH }}
+          dragElastic={0.1}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+          animate={controls}
+          style={{ x }}
           onClick={handleClick}
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
           className={cn(
-            "flex w-full items-center gap-3 p-4 text-left transition-all hover:bg-muted/50 bg-background",
+            "flex w-full items-center gap-3 p-4 text-left hover:bg-muted/50 bg-background cursor-grab active:cursor-grabbing",
             isActive && "bg-muted",
             isArchived && "opacity-60"
           )}
-          style={{
-            transform: `translateX(${swipeOffset}px)`,
-            transition: isSwiping ? "none" : "transform 0.2s ease-out",
-          }}
         >
           <Avatar
             src={image}
@@ -277,7 +299,7 @@ export function ConversationItem({
               )}
             </div>
           </div>
-        </button>
+        </motion.button>
       </div>
     </ContextMenu>
   );
