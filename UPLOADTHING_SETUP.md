@@ -66,6 +66,11 @@ Files can be uploaded by clicking the attachment (paperclip) icon in the message
 - Verify the file size doesn't exceed limits
 - Check the file type is supported
 
+### "Callback failed" error in local development
+This is expected behavior! In local development, Uploadthing's servers cannot reach your `localhost:3000` to execute the server callback. The file is still uploaded successfully.
+
+**Solution**: The app is configured with `awaitServerData: false` which means the client gets the file URL immediately without waiting for the server callback. Your files will upload and display correctly.
+
 ### Files not displaying
 - Ensure the message was saved successfully (check network tab)
 - Verify the attachment URLs are accessible

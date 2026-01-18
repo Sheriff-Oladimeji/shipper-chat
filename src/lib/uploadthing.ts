@@ -42,26 +42,29 @@ export const ourFileRouter = {
     }),
 
   // For any file type
-  messageAttachment: f({
-    image: { maxFileSize: "8MB", maxFileCount: 4 },
-    video: { maxFileSize: "64MB", maxFileCount: 1 },
-    audio: { maxFileSize: "16MB", maxFileCount: 4 },
-    pdf: { maxFileSize: "16MB", maxFileCount: 4 },
-    blob: { maxFileSize: "16MB", maxFileCount: 4 },
-  })
+  messageAttachment: f(
+    {
+      image: { maxFileSize: "8MB", maxFileCount: 4 },
+      video: { maxFileSize: "64MB", maxFileCount: 1 },
+      audio: { maxFileSize: "16MB", maxFileCount: 4 },
+      pdf: { maxFileSize: "16MB", maxFileCount: 4 },
+      blob: { maxFileSize: "16MB", maxFileCount: 4 },
+    },
+    {
+      // Don't wait for server callback - client gets file URL immediately
+      awaitServerData: false,
+    }
+  )
     .middleware(async () => {
       const user = await getCurrentUser();
       if (!user) throw new Error("Unauthorized");
       return { userId: user.id };
     })
-    .onUploadComplete(async ({ metadata, file }) => {
-      return {
-        uploadedBy: metadata.userId,
-        url: file.ufsUrl,
-        name: file.name,
-        size: file.size,
-        type: file.type,
-      };
+    .onUploadComplete(({ metadata, file }) => {
+      // This callback may not be reached in local dev (localhost not reachable)
+      console.log("Upload complete for user:", metadata.userId);
+      console.log("File URL:", file.ufsUrl || file.url);
+      return { uploadedBy: metadata.userId };
     }),
 } satisfies FileRouter;
 

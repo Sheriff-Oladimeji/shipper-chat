@@ -32,38 +32,37 @@ export function ConversationHeader({
 
   return (
     <header className="flex items-center justify-between px-4 py-3 border-b bg-card">
-      <button
-        className="flex items-center gap-3 hover:opacity-80 transition-opacity"
-        onClick={onOpenContactInfo}
-      >
+      <div className="flex items-center gap-3">
         <Button
           variant="ghost"
           size="icon"
           className="md:hidden"
-          onClick={(e) => {
-            e.stopPropagation();
-            handleBack();
-          }}
+          onClick={handleBack}
         >
           <ArrowLeft className="h-5 w-5" />
         </Button>
-        <Avatar
-          src={image}
-          fallback={name}
-          showOnlineStatus
-          isOnline={isOnline}
-        />
-        <div className="text-left">
-          <h2 className="font-semibold text-foreground">{name}</h2>
-          <p className="text-sm text-muted-foreground">
-            {isOnline ? (
-              <span className="text-green-500">Online</span>
-            ) : (
-              "Offline"
-            )}
-          </p>
-        </div>
-      </button>
+        <button
+          className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+          onClick={onOpenContactInfo}
+        >
+          <Avatar
+            src={image}
+            fallback={name}
+            showOnlineStatus
+            isOnline={isOnline}
+          />
+          <div className="text-left">
+            <h2 className="font-semibold text-foreground">{name}</h2>
+            <p className="text-sm text-muted-foreground">
+              {isOnline ? (
+                <span className="text-green-500">Online</span>
+              ) : (
+                "Offline"
+              )}
+            </p>
+          </div>
+        </button>
+      </div>
       <div className="flex items-center gap-1">
         <Button variant="ghost" size="icon">
           <Phone className="h-5 w-5" />

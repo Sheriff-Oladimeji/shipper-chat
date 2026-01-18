@@ -35,13 +35,20 @@ export function MessageInput({
 
   const { startUpload } = useUploadThing("messageAttachment", {
     onClientUploadComplete: (res) => {
-      if (res) {
-        const newFiles = res.map((file) => ({
-          url: file.ufsUrl,
-          name: file.name,
-          size: file.size,
-          mimeType: file.type,
-        }));
+      console.log("Upload complete response:", res);
+      if (res && res.length > 0) {
+        const newFiles = res.map((file) => {
+          // In Uploadthing v7+, file data comes directly from the response
+          // ufsUrl is the primary URL, fallback to url for compatibility
+          const fileUrl = file.ufsUrl || file.url;
+          console.log("Processing file:", file.name, "URL:", fileUrl);
+          return {
+            url: fileUrl,
+            name: file.name,
+            size: file.size,
+            mimeType: file.type || "application/octet-stream",
+          };
+        });
         setPendingFiles((prev) => [...prev, ...newFiles]);
       }
       setIsUploading(false);
