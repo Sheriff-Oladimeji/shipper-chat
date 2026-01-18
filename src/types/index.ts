@@ -30,6 +30,18 @@ export interface Message {
   createdAt: Date;
 }
 
+export interface ConversationSettings {
+  id: string;
+  userId: string;
+  conversationId: string;
+  isArchived: boolean;
+  isMuted: boolean;
+  isMarkedUnread: boolean;
+  isPinned: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export interface UserWithStatus extends User {
   isOnline: boolean;
 }
@@ -40,6 +52,7 @@ export interface ConversationWithDetails extends Conversation {
   messages: Message[];
   lastMessage?: Message;
   unreadCount?: number;
+  settings?: ConversationSettings;
 }
 
 export interface MessageWithSender extends Message {

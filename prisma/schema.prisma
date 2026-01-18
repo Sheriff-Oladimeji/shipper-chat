@@ -17,10 +17,11 @@ model User {
   lastSeenAt DateTime @default(now())
   createdAt  DateTime @default(now())
 
-  sentMessages         Message[]      @relation("SentMessages")
-  receivedMessages     Message[]      @relation("ReceivedMessages")
-  conversationsAsUser1 Conversation[] @relation("User1")
-  conversationsAsUser2 Conversation[] @relation("User2")
+  sentMessages           Message[]              @relation("SentMessages")
+  receivedMessages       Message[]              @relation("ReceivedMessages")
+  conversationsAsUser1   Conversation[]         @relation("User1")
+  conversationsAsUser2   Conversation[]         @relation("User2")
+  conversationSettings   ConversationSettings[]
 }
 
 model Conversation {
@@ -30,9 +31,10 @@ model Conversation {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  user1    User      @relation("User1", fields: [user1Id], references: [id])
-  user2    User      @relation("User2", fields: [user2Id], references: [id])
+  user1    User                   @relation("User1", fields: [user1Id], references: [id])
+  user2    User                   @relation("User2", fields: [user2Id], references: [id])
   messages Message[]
+  settings ConversationSettings[]
 
   @@unique([user1Id, user2Id])
 }
@@ -55,4 +57,23 @@ model Message {
   @@index([conversationId])
   @@index([senderId])
   @@index([receiverId])
+}
+
+model ConversationSettings {
+  id             String   @id @default(cuid())
+  userId         String
+  conversationId String
+  isArchived     Boolean  @default(false)
+  isMuted        Boolean  @default(false)
+  isMarkedUnread Boolean  @default(false)
+  isPinned       Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, conversationId])
+  @@index([userId])
+  @@index([conversationId])
 }

@@ -1,12 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { ConversationHeader } from "./conversation-header";
 import { MessageList } from "./message-list";
 import { MessageInput } from "../input/message-input";
-import { AIDialog } from "../input/ai-dialog";
 import { useMessages } from "@/hooks/use-messages";
-import { useAIChat } from "@/hooks/use-ai-chat";
 import { useConversationChannel } from "@/hooks/use-pusher";
 import { useChatStore } from "@/stores/chat-store";
 import type { User } from "@/types";
@@ -22,10 +20,8 @@ export function ConversationView({
   otherUser,
   currentUserId,
 }: ConversationViewProps) {
-  const [isAIDialogOpen, setIsAIDialogOpen] = useState(false);
   const { messages, isLoading, sendMessage, isSending, markAllRead } =
     useMessages(conversationId);
-  const { sendAIPrompt, isLoading: isAILoading } = useAIChat(conversationId);
   const { sendTypingIndicator } = useConversationChannel(conversationId);
   const { typingUsers } = useChatStore();
 
@@ -44,11 +40,6 @@ export function ConversationView({
     sendMessage(content);
   };
 
-  const handleAISubmit = (prompt: string) => {
-    sendAIPrompt(prompt);
-    setIsAIDialogOpen(false);
-  };
-
   return (
     <div className="flex h-full flex-col">
       <ConversationHeader
@@ -65,14 +56,7 @@ export function ConversationView({
       <MessageInput
         onSend={handleSendMessage}
         onTyping={sendTypingIndicator}
-        onAIClick={() => setIsAIDialogOpen(true)}
         isSending={isSending}
-      />
-      <AIDialog
-        open={isAIDialogOpen}
-        onOpenChange={setIsAIDialogOpen}
-        onSubmit={handleAISubmit}
-        isLoading={isAILoading}
       />
     </div>
   );

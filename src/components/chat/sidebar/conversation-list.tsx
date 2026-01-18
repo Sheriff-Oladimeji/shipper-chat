@@ -2,14 +2,47 @@
 
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ConversationItem } from "./conversation-item";
-import type { ConversationWithDetails, User } from "@/types";
+import type { ConversationWithDetails } from "@/types";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useCallback } from "react";
 
 interface ConversationListProps {
   conversations: ConversationWithDetails[];
   currentUserId: string;
   activeConversationId: string | null;
   searchQuery: string;
+  showArchived?: boolean;
   onSelectConversation: (id: string) => void;
+}
+
+async function updateConversationSettings(
+  conversationId: string,
+  settings: {
+    isArchived?: boolean;
+    isMarkedUnread?: boolean;
+    isMuted?: boolean;
+    isPinned?: boolean;
+  }
+) {
+  const response = await fetch(`/api/conversations/${conversationId}/settings`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(settings),
+  });
+  if (!response.ok) {
+    throw new Error("Failed to update settings");
+  }
+  return response.json();
+}
+
+async function deleteConversation(conversationId: string) {
+  const response = await fetch(`/api/conversations/${conversationId}`, {
+    method: "DELETE",
+  });
+  if (!response.ok) {
+    throw new Error("Failed to delete conversation");
+  }
+  return response.json();
 }
 
 export function ConversationList({
@@ -17,22 +50,123 @@ export function ConversationList({
   currentUserId,
   activeConversationId,
   searchQuery,
+  showArchived = false,
   onSelectConversation,
 }: ConversationListProps) {
+  const queryClient = useQueryClient();
+
+  const settingsMutation = useMutation({
+    mutationFn: ({
+      id,
+      settings,
+    }: {
+      id: string;
+      settings: {
+        isArchived?: boolean;
+        isMarkedUnread?: boolean;
+        isMuted?: boolean;
+        isPinned?: boolean;
+      };
+    }) => updateConversationSettings(id, settings),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["conversations"] });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: deleteConversation,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["conversations"] });
+    },
+  });
+
+  const handleArchive = useCallback(
+    (id: string) => {
+      const conversation = conversations.find((c) => c.id === id);
+      const isCurrentlyArchived = conversation?.settings?.isArchived || false;
+      settingsMutation.mutate({
+        id,
+        settings: { isArchived: !isCurrentlyArchived },
+      });
+    },
+    [conversations, settingsMutation]
+  );
+
+  const handleMarkUnread = useCallback(
+    (id: string) => {
+      const conversation = conversations.find((c) => c.id === id);
+      const isCurrentlyMarkedUnread =
+        conversation?.settings?.isMarkedUnread || false;
+      settingsMutation.mutate({
+        id,
+        settings: { isMarkedUnread: !isCurrentlyMarkedUnread },
+      });
+    },
+    [conversations, settingsMutation]
+  );
+
+  const handleMute = useCallback(
+    (id: string) => {
+      const conversation = conversations.find((c) => c.id === id);
+      const isCurrentlyMuted = conversation?.settings?.isMuted || false;
+      settingsMutation.mutate({
+        id,
+        settings: { isMuted: !isCurrentlyMuted },
+      });
+    },
+    [conversations, settingsMutation]
+  );
+
+  const handlePin = useCallback(
+    (id: string) => {
+      const conversation = conversations.find((c) => c.id === id);
+      const isCurrentlyPinned = conversation?.settings?.isPinned || false;
+      settingsMutation.mutate({
+        id,
+        settings: { isPinned: !isCurrentlyPinned },
+      });
+    },
+    [conversations, settingsMutation]
+  );
+
+  const handleDelete = useCallback(
+    (id: string) => {
+      if (confirm("Are you sure you want to delete this conversation?")) {
+        deleteMutation.mutate(id);
+      }
+    },
+    [deleteMutation]
+  );
+
   const filteredConversations = conversations.filter((conv) => {
     const otherUser = conv.user1Id === currentUserId ? conv.user2 : conv.user1;
-    return otherUser.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = otherUser.name
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase());
+    const isArchived = conv.settings?.isArchived || false;
+
+    // If showArchived is true, only show archived; otherwise exclude archived
+    if (showArchived) {
+      return matchesSearch && isArchived;
+    }
+    return matchesSearch && !isArchived;
   });
 
   if (filteredConversations.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
         <p className="text-muted-foreground">
-          {searchQuery ? "No conversations found" : "No conversations yet"}
+          {searchQuery
+            ? "No conversations found"
+            : showArchived
+            ? "No archived conversations"
+            : "No conversations yet"}
         </p>
-        <p className="text-sm text-muted-foreground mt-1">
-          Start a new message to begin chatting
-        </p>
+        {!searchQuery && !showArchived && (
+          <p className="text-sm text-muted-foreground mt-1">
+            Start a new message to begin chatting
+          </p>
+        )}
       </div>
     );
   }
@@ -61,7 +195,16 @@ export function ConversationList({
               isActive={conversation.id === activeConversationId}
               isRead={lastMessage?.isRead}
               isSentByMe={isSentByMe}
+              isArchived={conversation.settings?.isArchived}
+              isMarkedUnread={conversation.settings?.isMarkedUnread}
+              isMuted={conversation.settings?.isMuted}
+              isPinned={conversation.settings?.isPinned}
               onClick={() => onSelectConversation(conversation.id)}
+              onArchive={handleArchive}
+              onMarkUnread={handleMarkUnread}
+              onMute={handleMute}
+              onPin={handlePin}
+              onDelete={handleDelete}
             />
           );
         })}

@@ -1,6 +1,7 @@
 "use client";
 
 import { Sidebar } from "@/components/chat/sidebar";
+import { NavSidebar } from "@/components/nav-sidebar";
 import { QueryProvider } from "@/components/providers/query-provider";
 import { useAuth } from "@/hooks/use-auth";
 import { usePusher } from "@/hooks/use-pusher";
@@ -40,6 +41,9 @@ function ChatLayoutInner({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex h-screen bg-background">
+      {/* Left navigation sidebar */}
+      <NavSidebar />
+      {/* Conversations sidebar */}
       <div className="hidden md:block">
         <Sidebar currentUserId={user.id} />
       </div>

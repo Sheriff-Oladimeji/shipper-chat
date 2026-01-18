@@ -2,13 +2,12 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Smile, Paperclip, Mic, Send, Sparkles, Loader2 } from "lucide-react";
+import { Smile, Paperclip, Mic, Send, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface MessageInputProps {
   onSend: (message: string) => void;
   onTyping?: (isTyping: boolean) => void;
-  onAIClick?: () => void;
   isSending?: boolean;
   disabled?: boolean;
 }
@@ -16,7 +15,6 @@ interface MessageInputProps {
 export function MessageInput({
   onSend,
   onTyping,
-  onAIClick,
   isSending = false,
   disabled = false,
 }: MessageInputProps) {
@@ -102,16 +100,6 @@ export function MessageInput({
             )}
           />
           <div className="absolute bottom-2 right-2 flex items-center gap-1">
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8"
-              onClick={onAIClick}
-              disabled={disabled}
-            >
-              <Sparkles className="h-4 w-4 text-purple-500" />
-            </Button>
             <Button type="button" variant="ghost" size="icon" className="h-8 w-8">
               <Smile className="h-4 w-4 text-muted-foreground" />
             </Button>

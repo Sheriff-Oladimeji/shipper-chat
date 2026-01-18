@@ -44,17 +44,24 @@ export async function GET() {
         orderBy: { createdAt: "desc" },
         take: 1,
       },
+      settings: {
+        where: {
+          userId: currentUser.id,
+        },
+        take: 1,
+      },
     },
     orderBy: {
       updatedAt: "desc",
     },
   });
 
-  // Map conversations with last message (skip unread count for now - optimize later)
+  // Map conversations with last message and settings
   const conversationsWithDetails = conversations.map((conv) => ({
     ...conv,
     lastMessage: conv.messages[0] || null,
     unreadCount: 0, // TODO: Optimize with a single query
+    settings: conv.settings[0] || null,
   }));
 
   return NextResponse.json({
