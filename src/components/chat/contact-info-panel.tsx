@@ -77,10 +77,22 @@ function getFileExtension(name: string): string {
 
 function extractDomain(url: string): string {
   try {
-    return new URL(url).hostname;
+    // Add protocol if missing for URL parsing
+    const urlWithProtocol = url.startsWith("http") ? url : `https://${url}`;
+    return new URL(urlWithProtocol).hostname;
   } catch {
+    // Fallback: extract domain from the URL string
+    const match = url.match(/^(?:https?:\/\/)?(?:www\.)?([^\/\s]+)/i);
+    return match ? match[1] : url;
+  }
+}
+
+function getFullUrl(url: string): string {
+  // Ensure URL has protocol for proper linking
+  if (url.startsWith("http://") || url.startsWith("https://")) {
     return url;
   }
+  return `https://${url}`;
 }
 
 async function fetchConversationMedia(conversationId: string): Promise<ConversationMediaResponse["data"]> {
@@ -104,6 +116,8 @@ export function ContactInfoPanel({
     queryKey: ["conversation-media", conversationId],
     queryFn: () => fetchConversationMedia(conversationId),
     enabled: open && !!conversationId,
+    staleTime: 0, // Always fetch fresh data when panel opens
+    refetchOnMount: "always",
   });
 
   const groupedMedia = data?.media || {};
@@ -263,7 +277,7 @@ export function ContactInfoPanel({
                 {links.map((link) => (
                   <a
                     key={link.id}
-                    href={link.url}
+                    href={getFullUrl(link.url)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-start gap-3 p-4 hover:bg-muted/50 transition-colors"

@@ -3,7 +3,8 @@ import { getCurrentUser } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 
 // URL regex pattern to extract links from message content
-const urlRegex = /(https?:\/\/[^\s<>"{}|\\^`\[\]]+)/gi;
+// Matches: http://, https://, www., or domain.tld patterns
+const urlRegex = /(https?:\/\/[^\s<>"{}|\\^`\[\]]+|www\.[^\s<>"{}|\\^`\[\]]+|[a-zA-Z0-9][-a-zA-Z0-9]*\.[a-zA-Z]{2,}(?:\/[^\s<>"{}|\\^`\[\]]*)?)/gi;
 
 export async function GET(
   request: NextRequest,
@@ -55,13 +56,22 @@ export async function GET(
     },
   });
 
-  // Fetch messages with links
+  // Fetch messages that might contain links
+  // We search for common link patterns: http, www, .com, .org, .net, .io, etc.
   const messages = await prisma.message.findMany({
     where: {
       conversationId: id,
-      content: {
-        contains: "http",
-      },
+      OR: [
+        { content: { contains: "http" } },
+        { content: { contains: "www." } },
+        { content: { contains: ".com" } },
+        { content: { contains: ".org" } },
+        { content: { contains: ".net" } },
+        { content: { contains: ".io" } },
+        { content: { contains: ".co" } },
+        { content: { contains: ".dev" } },
+        { content: { contains: ".app" } },
+      ],
     },
     orderBy: { createdAt: "desc" },
     select: {
