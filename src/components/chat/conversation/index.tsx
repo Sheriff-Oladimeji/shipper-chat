@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { ConversationHeader } from "./conversation-header";
 import { MessageList } from "./message-list";
 import { MessageInput } from "../input/message-input";
+import { ContactInfoPanel } from "../contact-info-panel";
 import { useMessages } from "@/hooks/use-messages";
 import { useConversationChannel } from "@/hooks/use-pusher";
 import { useChatStore } from "@/stores/chat-store";
@@ -20,6 +21,7 @@ export function ConversationView({
   otherUser,
   currentUserId,
 }: ConversationViewProps) {
+  const [isContactInfoOpen, setIsContactInfoOpen] = useState(false);
   const { messages, isLoading, sendMessage, isSending, markAllRead } =
     useMessages(conversationId);
   const { sendTypingIndicator } = useConversationChannel(conversationId);
@@ -46,6 +48,7 @@ export function ConversationView({
         name={otherUser.name}
         image={otherUser.image}
         isOnline={otherUser.isOnline}
+        onOpenContactInfo={() => setIsContactInfoOpen(true)}
       />
       <MessageList
         messages={messages}
@@ -57,6 +60,11 @@ export function ConversationView({
         onSend={handleSendMessage}
         onTyping={sendTypingIndicator}
         isSending={isSending}
+      />
+      <ContactInfoPanel
+        open={isContactInfoOpen}
+        onOpenChange={setIsContactInfoOpen}
+        user={otherUser}
       />
     </div>
   );

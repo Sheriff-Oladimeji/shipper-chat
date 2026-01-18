@@ -10,6 +10,7 @@ interface ConversationHeaderProps {
   image?: string | null;
   isOnline?: boolean;
   onBack?: () => void;
+  onOpenContactInfo?: () => void;
 }
 
 export function ConversationHeader({
@@ -17,6 +18,7 @@ export function ConversationHeader({
   image,
   isOnline = false,
   onBack,
+  onOpenContactInfo,
 }: ConversationHeaderProps) {
   const router = useRouter();
 
@@ -30,12 +32,18 @@ export function ConversationHeader({
 
   return (
     <header className="flex items-center justify-between px-4 py-3 border-b bg-card">
-      <div className="flex items-center gap-3">
+      <button
+        className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+        onClick={onOpenContactInfo}
+      >
         <Button
           variant="ghost"
           size="icon"
           className="md:hidden"
-          onClick={handleBack}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleBack();
+          }}
         >
           <ArrowLeft className="h-5 w-5" />
         </Button>
@@ -45,7 +53,7 @@ export function ConversationHeader({
           showOnlineStatus
           isOnline={isOnline}
         />
-        <div>
+        <div className="text-left">
           <h2 className="font-semibold text-foreground">{name}</h2>
           <p className="text-sm text-muted-foreground">
             {isOnline ? (
@@ -55,7 +63,7 @@ export function ConversationHeader({
             )}
           </p>
         </div>
-      </div>
+      </button>
       <div className="flex items-center gap-1">
         <Button variant="ghost" size="icon">
           <Phone className="h-5 w-5" />
@@ -63,7 +71,7 @@ export function ConversationHeader({
         <Button variant="ghost" size="icon">
           <Video className="h-5 w-5" />
         </Button>
-        <Button variant="ghost" size="icon">
+        <Button variant="ghost" size="icon" onClick={onOpenContactInfo}>
           <MoreVertical className="h-5 w-5" />
         </Button>
       </div>

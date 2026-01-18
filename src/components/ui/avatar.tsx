@@ -7,7 +7,7 @@ interface AvatarProps extends React.HTMLAttributes<HTMLDivElement> {
   src?: string | null;
   alt?: string;
   fallback?: string;
-  size?: "sm" | "md" | "lg";
+  size?: "sm" | "md" | "lg" | "xl";
   showOnlineStatus?: boolean;
   isOnline?: boolean;
 }
@@ -16,12 +16,21 @@ const sizeClasses = {
   sm: "h-8 w-8",
   md: "h-10 w-10",
   lg: "h-12 w-12",
+  xl: "h-20 w-20",
 };
 
 const statusSizeClasses = {
   sm: "h-2.5 w-2.5",
   md: "h-3 w-3",
   lg: "h-3.5 w-3.5",
+  xl: "h-4 w-4",
+};
+
+const textSizeClasses = {
+  sm: "text-xs",
+  md: "text-xs",
+  lg: "text-sm",
+  xl: "text-xl",
 };
 
 export function Avatar({
@@ -61,7 +70,10 @@ export function Avatar({
             onError={() => setHasError(true)}
           />
         ) : (
-          <span className="flex h-full w-full items-center justify-center bg-gradient-to-br from-green-400 to-green-600 text-xs font-medium text-white">
+          <span className={cn(
+            "flex h-full w-full items-center justify-center bg-gradient-to-br from-green-400 to-green-600 font-medium text-white",
+            textSizeClasses[size]
+          )}>
             {initials}
           </span>
         )}
