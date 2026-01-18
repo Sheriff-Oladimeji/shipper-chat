@@ -1,36 +1,51 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Shippr Chat
 
-## Getting Started
+Real-time chat app with Next.js 16, Google OAuth, and AI assistance.
 
-First, run the development server:
+## Quick Start
 
 ```bash
+# Install
+npm install
+
+# Set up database
+npm run db:push
+npm run db:generate
+
+# Run
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Documentation
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Doc | Description |
+|-----|-------------|
+| [Authentication](docs/authentication.md) | Google OAuth + JWT tokens |
+| [Real-time](docs/realtime.md) | WebSocket messaging |
+| [Database](docs/database.md) | Prisma + Neon PostgreSQL |
+| [State Management](docs/state-management.md) | Zustand + React Query |
+| [AI Chat](docs/ai-chat.md) | Google Gemini integration |
+| [API Reference](docs/api-reference.md) | All endpoints |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Environment Variables
 
-## Learn More
+Copy `.env.example` to `.env` and fill in:
 
-To learn more about Next.js, take a look at the following resources:
+| Variable | Get from |
+|----------|----------|
+| `DATABASE_URL` | [neon.tech](https://neon.tech) |
+| `GOOGLE_CLIENT_ID` | [Google Cloud Console](https://console.cloud.google.com) |
+| `GOOGLE_CLIENT_SECRET` | Google Cloud Console |
+| `JWT_SECRET` | `openssl rand -base64 32` |
+| `JWT_REFRESH_SECRET` | `openssl rand -base64 32` |
+| `PUSHER_*` | [pusher.com](https://pusher.com) |
+| `GOOGLE_GENERATIVE_AI_API_KEY` | [AI Studio](https://aistudio.google.com) |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Tech Stack
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Next.js 16 (App Router)
+- Prisma + Neon PostgreSQL
+- Pusher (WebSocket service)
+- Google OAuth + JWT
+- Zustand + React Query
+- Vercel AI SDK + Gemini
