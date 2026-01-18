@@ -22,7 +22,6 @@ export function MessageList({
   typingUserNames,
   isLoading = false,
 }: MessageListProps) {
-  const scrollRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll to bottom on new messages
@@ -55,7 +54,7 @@ export function MessageList({
   let lastDate: Date | null = null;
 
   return (
-    <ScrollArea className="flex-1 px-4" ref={scrollRef}>
+    <ScrollArea className="flex-1 px-4">
       <div className="py-4">
         {messages.map((message, index) => {
           const messageDate = new Date(message.createdAt);

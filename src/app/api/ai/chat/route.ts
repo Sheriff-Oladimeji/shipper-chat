@@ -4,6 +4,7 @@ import { google } from "@ai-sdk/google";
 import { generateText } from "ai";
 import prisma from "@/lib/prisma";
 import { pusherServer, getConversationChannel, getUserChannel, PUSHER_EVENTS } from "@/lib/pusher";
+import type { Message } from "@/generated/prisma/client";
 
 export async function POST(request: NextRequest) {
   const currentUser = await getCurrentUser();
@@ -61,7 +62,7 @@ export async function POST(request: NextRequest) {
     // Build context from recent messages
     const messageContext = conversation.messages
       .reverse()
-      .map((m) => `${m.senderId === currentUser.id ? "User" : "Other"}: ${m.content}`)
+      .map((m: Message) => `${m.senderId === currentUser.id ? "User" : "Other"}: ${m.content}`)
       .join("\n");
 
     const systemPrompt = `You are a helpful AI assistant in a chat application.
