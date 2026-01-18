@@ -1,5 +1,4 @@
 import { PrismaClient } from "@prisma/client";
-// Note: Run `npx prisma generate` after setting up your database to generate the Prisma client
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
@@ -8,6 +7,7 @@ const globalForPrisma = globalThis as unknown as {
 export const prisma =
   globalForPrisma.prisma ??
   new PrismaClient({
+    datasourceUrl: process.env.DATABASE_URL,
     log: process.env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
   });
 
