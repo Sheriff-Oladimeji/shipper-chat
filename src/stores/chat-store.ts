@@ -29,6 +29,7 @@ interface ChatState {
 
   // Typing indicators
   typingUsers: Record<string, string[]>; // conversationId -> userIds
+  typingTimeouts: Record<string, NodeJS.Timeout>; // timeout keys
   setUserTyping: (conversationId: string, userId: string, isTyping: boolean) => void;
 
   // UI state
@@ -106,11 +107,38 @@ export const useChatStore = create<ChatState>((set, get) => ({
       return { onlineUsers: newSet };
     }),
 
-  // Typing indicators
+  // Typing indicators with auto-clear timeouts
   typingUsers: {},
+  typingTimeouts: {} as Record<string, NodeJS.Timeout>,
   setUserTyping: (conversationId, userId, isTyping) =>
     set((state) => {
       const current = state.typingUsers[conversationId] || [];
+      const timeoutKey = `${conversationId}-${userId}`;
+
+      // Clear existing timeout for this user
+      if (state.typingTimeouts[timeoutKey]) {
+        clearTimeout(state.typingTimeouts[timeoutKey]);
+      }
+
+      let newTimeouts = { ...state.typingTimeouts };
+
+      if (isTyping) {
+        // Auto-clear typing after 5 seconds if no stop received
+        const timeout = setTimeout(() => {
+          const store = get();
+          const currentTyping = store.typingUsers[conversationId] || [];
+          set({
+            typingUsers: {
+              ...store.typingUsers,
+              [conversationId]: currentTyping.filter((id) => id !== userId),
+            },
+          });
+        }, 5000);
+        newTimeouts[timeoutKey] = timeout;
+      } else {
+        delete newTimeouts[timeoutKey];
+      }
+
       const newTyping = isTyping
         ? [...new Set([...current, userId])]
         : current.filter((id) => id !== userId);
@@ -119,6 +147,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
           ...state.typingUsers,
           [conversationId]: newTyping,
         },
+        typingTimeouts: newTimeouts,
       };
     }),
 

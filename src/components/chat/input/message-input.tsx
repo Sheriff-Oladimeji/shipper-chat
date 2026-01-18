@@ -64,14 +64,18 @@ export function MessageInput({
     }
   }, [message]);
 
-  // Cleanup timeout on unmount
+  // Cleanup timeout on unmount and send stop typing
   useEffect(() => {
     return () => {
       if (typingTimeoutRef.current) {
         clearTimeout(typingTimeoutRef.current);
       }
+      // Send stop typing when leaving the conversation
+      if (onTyping) {
+        onTyping(false);
+      }
     };
-  }, []);
+  }, [onTyping]);
 
   return (
     <form onSubmit={handleSubmit} className="border-t bg-card p-4">

@@ -20,68 +20,28 @@ interface ContactInfoPanelProps {
   user: User;
 }
 
-// Dummy data for demonstration
-const dummyMedia = [
-  { id: "1", url: "/placeholder.jpg", month: "May" },
-  { id: "2", url: "/placeholder.jpg", month: "May" },
-  { id: "3", url: "/placeholder.jpg", month: "May" },
-  { id: "4", url: "/placeholder.jpg", month: "May" },
-  { id: "5", url: "/placeholder.jpg", month: "April 2025" },
-  { id: "6", url: "/placeholder.jpg", month: "April 2025" },
-  { id: "7", url: "/placeholder.jpg", month: "April 2025" },
-  { id: "8", url: "/placeholder.jpg", month: "April 2025" },
-];
+// Media, links, and docs will be populated from actual conversation data
+// For now, these are typed as empty arrays
+interface MediaItem {
+  id: string;
+  url: string;
+  month: string;
+}
 
-const dummyLinks = [
-  {
-    id: "1",
-    title: "Google Drive",
-    url: "https://drive.google.com",
-    description: "Shared folder with project files",
-    favicon: "https://www.google.com/favicon.ico",
-  },
-  {
-    id: "2",
-    title: "Figma Design",
-    url: "https://figma.com",
-    description: "UI/UX design mockups",
-    favicon: "https://www.figma.com/favicon.ico",
-  },
-  {
-    id: "3",
-    title: "GitHub Repository",
-    url: "https://github.com",
-    description: "Project source code",
-    favicon: "https://github.com/favicon.ico",
-  },
-];
+interface LinkItem {
+  id: string;
+  title: string;
+  url: string;
+  description: string;
+  favicon?: string;
+}
 
-const dummyDocs = [
-  {
-    id: "1",
-    name: "Project Proposal.pdf",
-    size: "2.4 MB",
-    type: "pdf",
-  },
-  {
-    id: "2",
-    name: "Meeting Notes.docx",
-    size: "156 KB",
-    type: "docx",
-  },
-  {
-    id: "3",
-    name: "Budget Spreadsheet.xlsx",
-    size: "890 KB",
-    type: "xlsx",
-  },
-  {
-    id: "4",
-    name: "Contract.pdf",
-    size: "1.2 MB",
-    type: "pdf",
-  },
-];
+interface DocItem {
+  id: string;
+  name: string;
+  size: string;
+  type: string;
+}
 
 function getFileIcon(type: string) {
   const colors: Record<string, string> = {
@@ -97,9 +57,7 @@ function getFileIcon(type: string) {
 }
 
 // Group media by month
-function groupByMonth(
-  items: { id: string; url: string; month: string }[]
-): Record<string, typeof items> {
+function groupByMonth(items: MediaItem[]): Record<string, MediaItem[]> {
   return items.reduce(
     (acc, item) => {
       if (!acc[item.month]) {
@@ -108,7 +66,7 @@ function groupByMonth(
       acc[item.month].push(item);
       return acc;
     },
-    {} as Record<string, typeof items>
+    {} as Record<string, MediaItem[]>
   );
 }
 
@@ -118,13 +76,19 @@ export function ContactInfoPanel({
   user,
 }: ContactInfoPanelProps) {
   const [activeTab, setActiveTab] = useState("media");
-  const groupedMedia = groupByMonth(dummyMedia);
+
+  // TODO: Fetch actual media, links, and docs from API
+  const media: MediaItem[] = [];
+  const links: LinkItem[] = [];
+  const docs: DocItem[] = [];
+
+  const groupedMedia = groupByMonth(media);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         transparent
-        className="w-80 p-0 gap-0 [&>button]:hidden"
+        className="w-[360px] sm:max-w-[360px] p-0 gap-0 [&>button]:hidden"
         side="right"
       >
         {/* Custom Header */}
@@ -244,7 +208,7 @@ export function ContactInfoPanel({
             className="flex-1 overflow-y-auto mt-0 p-0"
           >
             <div className="divide-y">
-              {dummyLinks.map((link) => (
+              {links.map((link) => (
                 <a
                   key={link.id}
                   href={link.url}
@@ -277,7 +241,7 @@ export function ContactInfoPanel({
                   </div>
                 </a>
               ))}
-              {dummyLinks.length === 0 && (
+              {links.length === 0 && (
                 <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
                   <Link2 className="h-12 w-12 mb-3 opacity-50" />
                   <p className="text-sm">No links shared yet</p>
@@ -292,7 +256,7 @@ export function ContactInfoPanel({
             className="flex-1 overflow-y-auto mt-0 p-0"
           >
             <div className="divide-y">
-              {dummyDocs.map((doc) => (
+              {docs.map((doc) => (
                 <button
                   key={doc.id}
                   className="flex w-full items-center gap-3 p-4 hover:bg-muted/50 transition-colors text-left"
@@ -313,7 +277,7 @@ export function ContactInfoPanel({
                   </div>
                 </button>
               ))}
-              {dummyDocs.length === 0 && (
+              {docs.length === 0 && (
                 <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
                   <FileText className="h-12 w-12 mb-3 opacity-50" />
                   <p className="text-sm">No documents shared yet</p>

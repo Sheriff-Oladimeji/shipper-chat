@@ -57,6 +57,15 @@ export async function GET(request: NextRequest) {
           },
         });
       }
+    } else {
+      // Existing user - update profile picture if it changed
+      user = await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          image: googleUser.picture,
+          name: googleUser.name, // Also update name in case it changed
+        },
+      });
     }
 
     // Update online status
