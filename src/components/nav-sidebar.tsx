@@ -1,181 +1,199 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import {
   Home,
   MessageSquare,
-  PenSquare,
+  Clock,
+  Star,
   Settings,
   LogOut,
   ChevronRight,
   Palette,
   Gift,
   ArrowLeft,
+  PenSquare,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/use-auth";
 import Image from "next/image";
 
-interface NavItem {
-  icon: React.ReactNode;
-  label: string;
-  href: string;
-}
-
-interface MenuItem {
-  icon: React.ReactNode;
-  label: string;
-  onClick?: () => void;
-  href?: string;
-  hasArrow?: boolean;
-}
-
 export function NavSidebar() {
   const router = useRouter();
   const pathname = usePathname();
   const { user, logout } = useAuth();
   const [showMenu, setShowMenu] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
-  const navItems: NavItem[] = [
-    {
-      icon: <Home className="h-5 w-5" />,
-      label: "Home",
-      href: "/",
-    },
-    {
-      icon: <MessageSquare className="h-5 w-5" />,
-      label: "Messages",
-      href: "/",
-    },
-    {
-      icon: <PenSquare className="h-5 w-5" />,
-      label: "Compose",
-      href: "/",
-    },
-    {
-      icon: <Settings className="h-5 w-5" />,
-      label: "Settings",
-      href: "/settings",
-    },
-  ];
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setShowMenu(false);
+      }
+    };
 
-  const menuItems: MenuItem[] = [
-    {
-      icon: <ArrowLeft className="h-4 w-4" />,
-      label: "Go back to dashboard",
-      onClick: () => router.push("/"),
-    },
-    {
-      icon: <PenSquare className="h-4 w-4" />,
-      label: "Rename file",
-      onClick: () => {},
-      hasArrow: true,
-    },
-    {
-      icon: <Gift className="h-4 w-4" />,
-      label: "Win free credits",
-      onClick: () => {},
-      hasArrow: true,
-    },
-    {
-      icon: <Palette className="h-4 w-4" />,
-      label: "Theme Style",
-      onClick: () => {},
-      hasArrow: true,
-    },
-  ];
-
-  const isActive = (href: string) => {
-    if (href === "/") {
-      return pathname === "/" || pathname.startsWith("/c/");
+    if (showMenu) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
     }
-    return pathname.startsWith(href);
-  };
+  }, [showMenu]);
+
+  const isMessagesActive = pathname === "/" || pathname.startsWith("/c/") || pathname === "/ai";
 
   return (
-    <aside className="flex h-full w-16 flex-col items-center border-r bg-background py-4">
+    <aside className="flex h-full w-14 flex-col items-center border-r bg-background py-3">
       {/* Logo with dropdown */}
-      <div className="relative mb-4">
+      <div className="relative mb-3" ref={menuRef}>
         <button
           onClick={() => setShowMenu(!showMenu)}
-          className="flex h-10 w-10 items-center justify-center rounded-lg transition-colors hover:bg-muted"
-          title="Menu"
+          className="flex h-9 w-9 items-center justify-center rounded-lg transition-colors hover:bg-muted"
         >
           <Image
             src="/logo.svg"
             alt="Shipper"
-            width={40}
-            height={40}
+            width={36}
+            height={36}
             className="rounded-lg"
           />
         </button>
 
         {showMenu && (
-          <div className="absolute left-16 top-0 z-50 w-56 rounded-lg border bg-background p-2 shadow-lg">
-            {menuItems.map((item, index) => (
+          <div className="absolute left-12 top-0 z-50 w-60 rounded-lg border bg-background shadow-lg">
+            <div className="p-1.5 border-b">
               <button
-                key={index}
                 onClick={() => {
-                  item.onClick?.();
+                  router.push("/");
                   setShowMenu(false);
                 }}
-                className="flex w-full items-center justify-between rounded-md px-3 py-2 text-sm transition-colors hover:bg-muted"
+                className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-sm transition-colors hover:bg-muted"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Go back to dashboard
+              </button>
+              <button
+                onClick={() => setShowMenu(false)}
+                className="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-sm transition-colors hover:bg-muted"
               >
                 <div className="flex items-center gap-2">
-                  {item.icon}
-                  {item.label}
+                  <PenSquare className="h-4 w-4" />
+                  Rename file
                 </div>
-                {item.hasArrow && (
-                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                )}
+                <ChevronRight className="h-3 w-3 text-muted-foreground" />
               </button>
-            ))}
-            <div className="my-2 h-px bg-border" />
-            <button
-              onClick={() => {
-                logout();
-                setShowMenu(false);
-              }}
-              className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-red-500 transition-colors hover:bg-muted"
-            >
-              <LogOut className="h-4 w-4" />
-              Log out
-            </button>
+            </div>
+
+            {user && (
+              <div className="px-2.5 py-2 border-b">
+                <p className="font-medium text-sm">{user.name}</p>
+                <p className="text-xs text-muted-foreground">{user.email}</p>
+              </div>
+            )}
+
+            <div className="px-2.5 py-2 border-b">
+              <div className="flex justify-between text-xs text-muted-foreground mb-1">
+                <span>Credits</span>
+                <span>Renews in</span>
+              </div>
+              <div className="flex justify-between text-sm font-semibold mb-1.5">
+                <span>20 left</span>
+                <span>6h 24m</span>
+              </div>
+              <div className="h-1.5 bg-muted rounded-full overflow-hidden mb-1.5">
+                <div className="h-full w-3/4 bg-green-500 rounded-full" />
+              </div>
+              <div className="flex justify-between text-[10px] text-muted-foreground">
+                <span>5 of 25 used today</span>
+                <span className="text-green-500">+25 tomorrow</span>
+              </div>
+            </div>
+
+            <div className="p-1.5">
+              <button
+                onClick={() => setShowMenu(false)}
+                className="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-sm transition-colors hover:bg-muted"
+              >
+                <div className="flex items-center gap-2">
+                  <Gift className="h-4 w-4" />
+                  Win free credits
+                </div>
+              </button>
+              <button
+                onClick={() => setShowMenu(false)}
+                className="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-sm transition-colors hover:bg-muted"
+              >
+                <div className="flex items-center gap-2">
+                  <Palette className="h-4 w-4" />
+                  Theme Style
+                </div>
+              </button>
+              <button
+                onClick={() => {
+                  logout();
+                  setShowMenu(false);
+                }}
+                className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-sm text-red-500 transition-colors hover:bg-muted"
+              >
+                <LogOut className="h-4 w-4" />
+                Log out
+              </button>
+            </div>
           </div>
         )}
       </div>
 
       {/* Nav items */}
-      <nav className="flex flex-1 flex-col items-center gap-2">
-        {navItems.map((item) => (
-          <button
-            key={item.label}
-            onClick={() => router.push(item.href)}
-            className={cn(
-              "flex h-10 w-10 items-center justify-center rounded-lg transition-colors",
-              isActive(item.href)
-                ? "bg-green-500 text-white"
-                : "text-muted-foreground hover:bg-muted hover:text-foreground"
-            )}
-            title={item.label}
-          >
-            {item.icon}
-          </button>
-        ))}
+      <nav className="flex flex-1 flex-col items-center gap-1">
+        <button
+          onClick={() => router.push("/")}
+          className={cn(
+            "flex h-9 w-9 items-center justify-center rounded-lg transition-colors",
+            isMessagesActive
+              ? "bg-green-500 text-white"
+              : "text-muted-foreground hover:bg-muted hover:text-foreground"
+          )}
+          title="Home"
+        >
+          <Home className="h-4 w-4" />
+        </button>
+        <button
+          className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+          title="Recent"
+        >
+          <Clock className="h-4 w-4" />
+        </button>
+        <button
+          className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+          title="Starred"
+        >
+          <Star className="h-4 w-4" />
+        </button>
+        <button
+          className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+          title="Messages"
+        >
+          <MessageSquare className="h-4 w-4" />
+        </button>
       </nav>
 
-      {/* User avatar at bottom */}
-      <div className="mt-auto">
-        {user && (
-          <Avatar
-            src={user.image}
-            fallback={user.name}
-            size="md"
-          />
-        )}
-      </div>
+      {/* Settings */}
+      <button
+        className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors mb-2"
+        title="Settings"
+      >
+        <Settings className="h-4 w-4" />
+      </button>
+
+      {/* User avatar */}
+      {user && (
+        <Avatar
+          src={user.image}
+          fallback={user.name}
+          size="sm"
+        />
+      )}
     </aside>
   );
 }
