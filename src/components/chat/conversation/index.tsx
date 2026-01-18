@@ -38,8 +38,8 @@ export function ConversationView({
     .filter((id) => id !== currentUserId)
     .map(() => otherUser.name);
 
-  const handleSendMessage = (content: string) => {
-    sendMessage(content);
+  const handleSendMessage = (content: string, attachments?: Array<{ url: string; name: string; size: number; mimeType: string }>) => {
+    sendMessage(content, attachments);
   };
 
   return (
@@ -65,6 +65,7 @@ export function ConversationView({
         open={isContactInfoOpen}
         onOpenChange={setIsContactInfoOpen}
         user={otherUser}
+        conversationId={conversationId}
       />
     </div>
   );

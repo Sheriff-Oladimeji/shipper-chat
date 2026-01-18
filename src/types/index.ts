@@ -18,6 +18,17 @@ export interface Conversation {
   updatedAt: Date;
 }
 
+export interface Attachment {
+  id: string;
+  messageId: string;
+  url: string;
+  name: string;
+  size: number;
+  type: string; // image, video, audio, document, other
+  mimeType: string;
+  createdAt: Date;
+}
+
 export interface Message {
   id: string;
   content: string;
@@ -28,6 +39,7 @@ export interface Message {
   isDelivered: boolean;
   isAiGenerated: boolean;
   createdAt: Date;
+  attachments?: Attachment[];
 }
 
 export interface ConversationSettings {
@@ -58,6 +70,7 @@ export interface ConversationWithDetails extends Conversation {
 export interface MessageWithSender extends Message {
   sender: User;
   receiver: User;
+  attachments?: Attachment[];
 }
 
 export interface JWTPayload {

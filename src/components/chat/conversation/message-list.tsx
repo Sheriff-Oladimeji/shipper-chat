@@ -72,6 +72,7 @@ export function MessageList({
                 isRead={message.isRead}
                 isDelivered={message.isDelivered}
                 isAiGenerated={message.isAiGenerated}
+                attachments={message.attachments}
               />
             </div>
           );

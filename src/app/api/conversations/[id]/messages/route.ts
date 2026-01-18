@@ -56,6 +56,7 @@ export async function GET(
           image: true,
         },
       },
+      attachments: true,
     },
   });
 
@@ -103,11 +104,12 @@ export async function POST(
   }
 
   const body = await request.json();
-  const { content } = body;
+  const { content, attachments } = body;
 
-  if (!content?.trim()) {
+  // Allow messages with either content or attachments (or both)
+  if (!content?.trim() && (!attachments || attachments.length === 0)) {
     return NextResponse.json(
-      { success: false, error: "Message content is required" },
+      { success: false, error: "Message content or attachments required" },
       { status: 400 }
     );
   }
@@ -116,12 +118,37 @@ export async function POST(
     ? conversation.user2Id
     : conversation.user1Id;
 
+  // Determine attachment type from mimeType
+  const getAttachmentType = (mimeType: string): string => {
+    if (mimeType.startsWith("image/")) return "image";
+    if (mimeType.startsWith("video/")) return "video";
+    if (mimeType.startsWith("audio/")) return "audio";
+    if (mimeType === "application/pdf" ||
+        mimeType.includes("document") ||
+        mimeType.includes("spreadsheet") ||
+        mimeType.includes("word") ||
+        mimeType.includes("excel") ||
+        mimeType === "text/plain") return "document";
+    return "other";
+  };
+
   const message = await prisma.message.create({
     data: {
-      content: content.trim(),
+      content: content?.trim() || "",
       senderId: currentUser.id,
       receiverId,
       conversationId: id,
+      ...(attachments && attachments.length > 0 && {
+        attachments: {
+          create: attachments.map((att: { url: string; name: string; size: number; mimeType: string }) => ({
+            url: att.url,
+            name: att.name,
+            size: att.size,
+            mimeType: att.mimeType,
+            type: getAttachmentType(att.mimeType),
+          })),
+        },
+      }),
     },
     include: {
       sender: {
@@ -131,6 +158,7 @@ export async function POST(
           image: true,
         },
       },
+      attachments: true,
     },
   });
 

@@ -3,11 +3,21 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useChatStore } from "@/stores/chat-store";
 import { useEffect } from "react";
-import type { Message } from "@/types";
+import type { Message, Attachment } from "@/types";
 
 interface MessagesResponse {
   data: Message[];
   nextCursor: string | null;
+}
+
+interface SendMessagePayload {
+  content: string;
+  attachments?: Array<{
+    url: string;
+    name: string;
+    size: number;
+    mimeType: string;
+  }>;
 }
 
 async function fetchMessages(conversationId: string): Promise<Message[]> {
@@ -19,11 +29,11 @@ async function fetchMessages(conversationId: string): Promise<Message[]> {
   return data.data;
 }
 
-async function sendMessage(conversationId: string, content: string): Promise<Message> {
+async function sendMessage(conversationId: string, payload: SendMessagePayload): Promise<Message> {
   const response = await fetch(`/api/conversations/${conversationId}/messages`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ content }),
+    body: JSON.stringify(payload),
   });
   if (!response.ok) {
     throw new Error("Failed to send message");
@@ -63,13 +73,14 @@ export function useMessages(conversationId: string | null) {
   }, [conversationId, messages, setMessages]);
 
   const sendMutation = useMutation({
-    mutationFn: ({ content }: { content: string }) =>
-      sendMessage(conversationId!, content),
+    mutationFn: (payload: SendMessagePayload) =>
+      sendMessage(conversationId!, payload),
     onSuccess: (newMessage) => {
       if (conversationId) {
         addMessage(conversationId, newMessage);
         queryClient.invalidateQueries({ queryKey: ["messages", conversationId] });
         queryClient.invalidateQueries({ queryKey: ["conversations"] });
+        queryClient.invalidateQueries({ queryKey: ["conversation-media", conversationId] });
       }
     },
   });
@@ -86,7 +97,8 @@ export function useMessages(conversationId: string | null) {
     isLoading,
     error,
     refetch,
-    sendMessage: (content: string) => sendMutation.mutate({ content }),
+    sendMessage: (content: string, attachments?: SendMessagePayload["attachments"]) =>
+      sendMutation.mutate({ content, attachments }),
     isSending: sendMutation.isPending,
     markAllRead: markReadMutation.mutate,
   };

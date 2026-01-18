@@ -53,10 +53,26 @@ model Message {
   sender       User         @relation("SentMessages", fields: [senderId], references: [id])
   receiver     User         @relation("ReceivedMessages", fields: [receiverId], references: [id])
   conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  attachments  Attachment[]
 
   @@index([conversationId])
   @@index([senderId])
   @@index([receiverId])
+}
+
+model Attachment {
+  id        String   @id @default(cuid())
+  messageId String
+  url       String
+  name      String
+  size      Int
+  type      String   // image, video, audio, document, other
+  mimeType  String
+  createdAt DateTime @default(now())
+
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@index([messageId])
 }
 
 model ConversationSettings {
