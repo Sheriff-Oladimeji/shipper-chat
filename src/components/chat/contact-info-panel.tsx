@@ -181,35 +181,28 @@ export function ContactInfoPanel({
           onValueChange={setActiveTab}
           className="flex-1 flex flex-col overflow-hidden"
         >
-          <TabsList className="grid w-full grid-cols-3 rounded-none border-b bg-transparent h-auto p-0">
-            <TabsTrigger
-              value="media"
-              className={cn(
-                "rounded-none py-3 text-sm font-medium border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary"
-              )}
-            >
-              <Image className="h-4 w-4 mr-1.5" />
-              Media
-            </TabsTrigger>
-            <TabsTrigger
-              value="link"
-              className={cn(
-                "rounded-none py-3 text-sm font-medium border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary"
-              )}
-            >
-              <Link2 className="h-4 w-4 mr-1.5" />
-              Link
-            </TabsTrigger>
-            <TabsTrigger
-              value="docs"
-              className={cn(
-                "rounded-none py-3 text-sm font-medium border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary"
-              )}
-            >
-              <FileText className="h-4 w-4 mr-1.5" />
-              Docs
-            </TabsTrigger>
-          </TabsList>
+          <div className="px-4 py-3 border-b">
+            <TabsList className="grid w-full grid-cols-3 bg-muted rounded-full h-10 p-1">
+              <TabsTrigger
+                value="media"
+                className="rounded-full text-sm font-medium data-[state=active]:bg-white data-[state=active]:text-foreground data-[state=active]:shadow-sm text-muted-foreground"
+              >
+                Media
+              </TabsTrigger>
+              <TabsTrigger
+                value="link"
+                className="rounded-full text-sm font-medium data-[state=active]:bg-white data-[state=active]:text-foreground data-[state=active]:shadow-sm text-muted-foreground"
+              >
+                Link
+              </TabsTrigger>
+              <TabsTrigger
+                value="docs"
+                className="rounded-full text-sm font-medium data-[state=active]:bg-white data-[state=active]:text-foreground data-[state=active]:shadow-sm text-muted-foreground"
+              >
+                Docs
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
           {/* Media Tab */}
           <TabsContent

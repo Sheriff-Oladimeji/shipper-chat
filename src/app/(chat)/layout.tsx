@@ -47,13 +47,13 @@ function ChatLayoutInner({ children }: { children: React.ReactNode }) {
       {/* Right content area with top navbar spanning sidebar + main */}
       <div className="flex-1 flex flex-col min-w-0">
         <TopNavbar />
-        <div className="flex-1 flex min-h-0">
+        <div className="flex-1 flex min-h-0 bg-[#F3F3EE]">
           {/* Conversations sidebar */}
-          <div className="hidden md:block">
+          <div className="hidden md:block p-3 pr-0">
             <Sidebar currentUserId={user.id} />
           </div>
           {/* Main content area */}
-          <main className="flex-1 flex flex-col min-w-0 bg-[#F3F3EE]">{children}</main>
+          <main className="flex-1 flex flex-col min-w-0">{children}</main>
         </div>
       </div>
     </div>

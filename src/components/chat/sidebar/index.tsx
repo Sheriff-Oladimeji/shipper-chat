@@ -74,7 +74,7 @@ export function Sidebar({ currentUserId }: SidebarProps) {
     "shipper ai".includes(searchQuery.toLowerCase());
 
   return (
-    <aside className="relative flex h-full w-80 flex-col border-r bg-card">
+    <aside className="relative flex h-full w-80 flex-col bg-card rounded-2xl border overflow-hidden">
       <SidebarHeader
         onNewMessage={() => setIsNewMessageOpen(!isNewMessageOpen)}
         isOpen={isNewMessageOpen}
