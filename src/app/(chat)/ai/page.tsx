@@ -6,7 +6,8 @@ import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { Send, Sparkles, Loader2 } from "lucide-react";
+import { Send, Loader2 } from "lucide-react";
+import Image from "next/image";
 import { useAuth } from "@/hooks/use-auth";
 
 interface AIMessage {
@@ -80,14 +81,16 @@ export default function AIChat() {
     <div className="flex h-full flex-col">
       {/* Header */}
       <div className="flex items-center gap-3 border-b px-4 py-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-green-400 to-green-600">
-          <Sparkles className="h-5 w-5 text-white" />
-        </div>
+        <Image
+          src="/logo.svg"
+          alt="Shipper AI"
+          width={40}
+          height={40}
+          className="rounded-full"
+        />
         <div>
-          <h1 className="font-semibold text-foreground">AI Assistant</h1>
-          <p className="text-xs text-muted-foreground">
-            Powered by Google Gemini
-          </p>
+          <h1 className="font-semibold text-foreground">Shipper AI</h1>
+          <p className="text-xs text-green-500">Online</p>
         </div>
       </div>
 
@@ -95,11 +98,15 @@ export default function AIChat() {
       <div ref={scrollRef} className="flex-1 overflow-y-auto p-4">
         {messages.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center text-center">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-green-400 to-green-600 mb-4">
-              <Sparkles className="h-8 w-8 text-white" />
-            </div>
+            <Image
+              src="/logo.svg"
+              alt="Shipper AI"
+              width={64}
+              height={64}
+              className="rounded-full mb-4"
+            />
             <h2 className="text-xl font-semibold text-foreground mb-2">
-              Hi, I'm your AI Assistant
+              Hi, I'm Shipper AI
             </h2>
             <p className="text-muted-foreground max-w-md">
               Ask me anything! I can help with questions, writing, analysis, and
@@ -117,9 +124,13 @@ export default function AIChat() {
                 )}
               >
                 {message.role === "assistant" && (
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-green-400 to-green-600">
-                    <Sparkles className="h-4 w-4 text-white" />
-                  </div>
+                  <Image
+                    src="/logo.svg"
+                    alt="Shipper AI"
+                    width={32}
+                    height={32}
+                    className="shrink-0 rounded-full"
+                  />
                 )}
                 <div
                   className={cn(
@@ -143,9 +154,13 @@ export default function AIChat() {
             ))}
             {mutation.isPending && (
               <div className="flex gap-3 justify-start">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-green-400 to-green-600">
-                  <Sparkles className="h-4 w-4 text-white" />
-                </div>
+                <Image
+                  src="/logo.svg"
+                  alt="Shipper AI"
+                  width={32}
+                  height={32}
+                  className="shrink-0 rounded-full"
+                />
                 <div className="bg-muted rounded-2xl px-4 py-2">
                   <div className="flex space-x-1">
                     <span className="h-2 w-2 rounded-full bg-muted-foreground animate-bounce [animation-delay:-0.3s]" />
