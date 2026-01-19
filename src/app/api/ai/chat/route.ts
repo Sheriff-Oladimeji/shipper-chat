@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { google } from "@ai-sdk/google";
 import { generateText } from "ai";
-import prisma from "@/lib/prisma";
-import { pusherServer, getConversationChannel, getUserChannel, PUSHER_EVENTS } from "@/lib/pusher";
+import prisma from "@/lib/db";
+import { pusherServer, getConversationChannel, getUserChannel, PUSHER_EVENTS } from "@/lib/realtime";
 import type { Message } from "@/generated/prisma";
 
 export async function POST(request: NextRequest) {

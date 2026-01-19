@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils";
 import { Avatar } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/use-auth";
 import { useChatStore } from "@/stores/chat-store";
-import { ProfileSettingsModal } from "./profile-settings-modal";
+import { ProfileSettingsModal } from "@/components/modals";
 import Image from "next/image";
 
 interface NavSidebarProps {

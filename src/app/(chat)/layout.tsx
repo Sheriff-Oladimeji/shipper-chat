@@ -1,8 +1,7 @@
 "use client";
 
 import { Sidebar } from "@/components/chat/sidebar";
-import { NavSidebar } from "@/components/nav-sidebar";
-import { TopNavbar } from "@/components/top-navbar";
+import { NavSidebar, TopNavbar } from "@/components/layout";
 import { QueryProvider } from "@/components/providers/query-provider";
 import { useAuth } from "@/hooks/use-auth";
 import { usePusher } from "@/hooks/use-pusher";

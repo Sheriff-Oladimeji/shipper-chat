@@ -6,7 +6,14 @@ const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || "fallback-secret-change-in-production"
 );
 
-const publicPaths = ["/login", "/api/auth/login", "/api/auth/callback"];
+const publicPaths = [
+  "/login",
+  "/api/auth/login",
+  "/api/auth/callback",
+  "/api/auth/signup",
+  "/api/auth/signin",
+  "/api/auth/refresh",
+];
 
 function isPublicPath(pathname: string): boolean {
   return publicPaths.some(

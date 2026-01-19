@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
-import { getPusherServer } from "@/lib/pusher";
+import { getPusherServer } from "@/lib/realtime";
 
 export async function POST(request: NextRequest) {
   const currentUser = await getCurrentUser();

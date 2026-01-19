@@ -4,7 +4,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Smile, Paperclip, Mic, Send, Loader2, X, Trash2, Image, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useUploadThing } from "@/lib/uploadthing-client";
+import { useUploadThing } from "@/lib/upload/uploadthing-client";
 import data from "@emoji-mart/data";
 import Picker from "@emoji-mart/react";
 

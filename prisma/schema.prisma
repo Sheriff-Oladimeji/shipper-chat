@@ -12,6 +12,7 @@ model User {
   email      String   @unique
   name       String
   image      String?
+  password   String?  // For email/password auth
   googleId   String?  @unique
   isOnline   Boolean  @default(false)
   lastSeenAt DateTime @default(now())

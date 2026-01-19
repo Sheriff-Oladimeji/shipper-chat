@@ -6,7 +6,7 @@ import {
   setAuthCookies,
   REFRESH_TOKEN_COOKIE,
 } from "@/lib/auth";
-import prisma from "@/lib/prisma";
+import prisma from "@/lib/db";
 
 export async function POST() {
   const cookieStore = await cookies();

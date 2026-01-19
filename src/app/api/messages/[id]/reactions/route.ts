@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
-import prisma from "@/lib/prisma";
-import { pusherServer, getConversationChannel, PUSHER_EVENTS } from "@/lib/pusher";
+import prisma from "@/lib/db";
+import { pusherServer, getConversationChannel, PUSHER_EVENTS } from "@/lib/realtime";
 
 export async function POST(
   request: NextRequest,

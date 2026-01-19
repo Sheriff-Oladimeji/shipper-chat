@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { verifyAccessToken, verifyRefreshToken, createTokens } from "./jwt";
-import prisma from "@/lib/prisma";
+import prisma from "@/lib/db";
 import type { User } from "@/generated/prisma";
 
 export const ACCESS_TOKEN_COOKIE = "access_token";
