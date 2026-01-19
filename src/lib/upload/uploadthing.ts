@@ -38,7 +38,12 @@ export const ourFileRouter = {
       return { userId: user.id };
     })
     .onUploadComplete(async ({ metadata, file }) => {
-      return { uploadedBy: metadata.userId, url: file.ufsUrl, name: file.name, size: file.size };
+      return {
+        uploadedBy: metadata.userId,
+        url: file.ufsUrl,
+        name: file.name,
+        size: file.size,
+      };
     }),
 
   // For any file type
@@ -53,7 +58,7 @@ export const ourFileRouter = {
     {
       // Don't wait for server callback - client gets file URL immediately
       awaitServerData: false,
-    }
+    },
   )
     .middleware(async () => {
       const user = await getCurrentUser();
@@ -61,9 +66,6 @@ export const ourFileRouter = {
       return { userId: user.id };
     })
     .onUploadComplete(({ metadata, file }) => {
-      // This callback may not be reached in local dev (localhost not reachable)
-      console.log("Upload complete for user:", metadata.userId);
-      console.log("File URL:", file.ufsUrl || file.url);
       return { uploadedBy: metadata.userId };
     }),
 } satisfies FileRouter;
