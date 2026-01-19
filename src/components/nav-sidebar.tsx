@@ -13,6 +13,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Avatar } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/use-auth";
+import { useChatStore } from "@/stores/chat-store";
 import { ProfileSettingsModal } from "./profile-settings-modal";
 import Image from "next/image";
 
@@ -24,6 +25,7 @@ export function NavSidebar({ onOpenSettings }: NavSidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { user, logout } = useAuth();
+  const { showArchived, setShowArchived } = useChatStore();
   const [showSettingsMenu, setShowSettingsMenu] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const settingsMenuRef = useRef<HTMLDivElement>(null);
@@ -66,10 +68,13 @@ export function NavSidebar({ onOpenSettings }: NavSidebarProps) {
         {/* Nav items */}
         <nav className="flex flex-1 flex-col items-center gap-1">
           <button
-            onClick={() => router.push("/")}
+            onClick={() => {
+              setShowArchived(false);
+              router.push("/");
+            }}
             className={cn(
               "flex h-9 w-9 items-center justify-center rounded-lg transition-colors",
-              isMessagesActive
+              isMessagesActive && !showArchived
                 ? "bg-green-500 text-white"
                 : "text-muted-foreground hover:bg-muted hover:text-foreground"
             )}
@@ -78,14 +83,26 @@ export function NavSidebar({ onOpenSettings }: NavSidebarProps) {
             <Home className="h-4 w-4" />
           </button>
           <button
-            onClick={() => router.push("/")}
+            onClick={() => {
+              setShowArchived(false);
+              router.push("/");
+            }}
             className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
             title="Messages"
           >
             <MessageSquare className="h-4 w-4" />
           </button>
           <button
-            className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+            onClick={() => {
+              setShowArchived(true);
+              router.push("/");
+            }}
+            className={cn(
+              "flex h-9 w-9 items-center justify-center rounded-lg transition-colors",
+              showArchived
+                ? "bg-green-500 text-white"
+                : "text-muted-foreground hover:bg-muted hover:text-foreground"
+            )}
             title="Archive"
           >
             <Archive className="h-4 w-4" />

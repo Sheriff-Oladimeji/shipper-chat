@@ -6,12 +6,16 @@ import { Avatar } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/use-auth";
 import { useRouter } from "next/navigation";
 import { ProfileSettingsModal } from "./profile-settings-modal";
+import { SearchModal } from "./search-modal";
+import { NotificationSettingsModal } from "./notification-settings-modal";
 
 export function TopNavbar() {
   const { user, logout } = useAuth();
   const router = useRouter();
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showSearchModal, setShowSearchModal] = useState(false);
+  const [showNotificationModal, setShowNotificationModal] = useState(false);
 
   const handleLogout = async () => {
     await logout();
@@ -30,7 +34,10 @@ export function TopNavbar() {
         {/* Right - Search, notifications, settings, user */}
         <div className="flex items-center gap-2">
           {/* Search */}
-          <button className="flex items-center gap-2 rounded-lg border bg-muted/50 px-3 py-1.5 text-sm text-muted-foreground hover:bg-muted transition-colors">
+          <button
+            onClick={() => setShowSearchModal(true)}
+            className="flex items-center gap-2 rounded-lg border bg-muted/50 px-3 py-1.5 text-sm text-muted-foreground hover:bg-muted transition-colors"
+          >
             <Search className="h-4 w-4" />
             <span>Search</span>
             <kbd className="ml-8 pointer-events-none hidden h-5 select-none items-center gap-1 rounded border bg-background px-1.5 font-mono text-[10px] font-medium opacity-100 sm:flex">
@@ -39,7 +46,10 @@ export function TopNavbar() {
           </button>
 
           {/* Notification bell */}
-          <button className="flex h-9 w-9 items-center justify-center rounded-lg hover:bg-muted transition-colors">
+          <button
+            onClick={() => setShowNotificationModal(true)}
+            className="flex h-9 w-9 items-center justify-center rounded-lg hover:bg-muted transition-colors"
+          >
             <Bell className="h-5 w-5 text-muted-foreground" />
           </button>
 
@@ -105,10 +115,18 @@ export function TopNavbar() {
         </div>
       </header>
 
-      {/* Profile Settings Modal */}
+      {/* Modals */}
       <ProfileSettingsModal
         open={showProfileModal}
         onOpenChange={setShowProfileModal}
+      />
+      <SearchModal
+        open={showSearchModal}
+        onOpenChange={setShowSearchModal}
+      />
+      <NotificationSettingsModal
+        open={showNotificationModal}
+        onOpenChange={setShowNotificationModal}
       />
     </>
   );

@@ -79,6 +79,11 @@ export function NewMessageDropdown({
             onChange={(e) => setSearch(e.target.value)}
             className="pl-8 h-8 text-sm"
             autoFocus
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="off"
+            spellCheck={false}
+            data-form-type="other"
           />
         </div>
       </div>

@@ -21,10 +21,9 @@ export function Sidebar({ currentUserId }: SidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
   const [isNewMessageOpen, setIsNewMessageOpen] = useState(false);
-  const [showArchived, setShowArchived] = useState(false);
   const [contactInfoConversationId, setContactInfoConversationId] = useState<string | null>(null);
   const newMessageButtonRef = useRef<HTMLButtonElement>(null);
-  const { searchQuery, setSearchQuery, activeConversationId, setActiveConversationId } =
+  const { searchQuery, setSearchQuery, activeConversationId, setActiveConversationId, showArchived, setShowArchived } =
     useChatStore();
   const { conversations, createConversation, isCreating } = useConversations();
 
