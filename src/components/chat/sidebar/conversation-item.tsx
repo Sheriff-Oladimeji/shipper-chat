@@ -10,10 +10,15 @@ import {
   Mail,
   MailOpen,
   BellOff,
-  Bell,
   Pin,
   PinOff,
   Trash2,
+  MessageCircle,
+  Volume2,
+  ChevronRight,
+  UserCircle,
+  Upload,
+  X,
 } from "lucide-react";
 import { useState, useCallback } from "react";
 import {
@@ -75,11 +80,11 @@ export function ConversationItem({
   const [isDragging, setIsDragging] = useState(false);
   const x = useMotionValue(0);
 
-  // Transform for left action (Archive) - appears when swiping right
+  // Transform for left action (Unread) - appears when swiping right
   const leftActionOpacity = useTransform(x, [0, ACTION_WIDTH / 2, ACTION_WIDTH], [0, 0.5, 1]);
   const leftActionScale = useTransform(x, [0, ACTION_WIDTH], [0.8, 1]);
 
-  // Transform for right action (Unread) - appears when swiping left
+  // Transform for right action (Archive) - appears when swiping left
   const rightActionOpacity = useTransform(x, [-ACTION_WIDTH, -ACTION_WIDTH / 2, 0], [1, 0.5, 0]);
   const rightActionScale = useTransform(x, [-ACTION_WIDTH, 0], [1, 0.8]);
 
@@ -99,12 +104,12 @@ export function ConversationItem({
     const shouldTriggerRight = offset > SWIPE_THRESHOLD || (offset > 40 && velocity > 500);
     const shouldTriggerLeft = offset < -SWIPE_THRESHOLD || (offset < -40 && velocity < -500);
 
-    if (shouldTriggerRight && onArchive) {
-      // Trigger action and snap back
-      onArchive(id);
-    } else if (shouldTriggerLeft && onMarkUnread) {
-      // Trigger action and snap back
+    if (shouldTriggerRight && onMarkUnread) {
+      // Swipe right = Mark unread
       onMarkUnread(id);
+    } else if (shouldTriggerLeft && onArchive) {
+      // Swipe left = Archive
+      onArchive(id);
     }
 
     // Always snap back to center using x.set for immediate response
@@ -125,15 +130,24 @@ export function ConversationItem({
       <ContextMenuItem onClick={() => onMarkUnread?.(id)}>
         {isMarkedUnread || unreadCount > 0 ? (
           <>
-            <MailOpen className="h-4 w-4" />
+            <MessageCircle className="h-4 w-4" />
             Mark as read
           </>
         ) : (
           <>
-            <Mail className="h-4 w-4" />
+            <MessageCircle className="h-4 w-4" />
             Mark as unread
           </>
         )}
+      </ContextMenuItem>
+      <ContextMenuItem onClick={() => onArchive?.(id)}>
+        <Archive className="h-4 w-4" />
+        {isArchived ? "Unarchive" : "Archive"}
+      </ContextMenuItem>
+      <ContextMenuItem onClick={() => onMute?.(id)}>
+        <Volume2 className="h-4 w-4" />
+        {isMuted ? "Unmute" : "Mute"}
+        <ChevronRight className="h-4 w-4 ml-auto" />
       </ContextMenuItem>
       <ContextMenuItem onClick={() => onPin?.(id)}>
         {isPinned ? (
@@ -148,27 +162,23 @@ export function ConversationItem({
           </>
         )}
       </ContextMenuItem>
-      <ContextMenuItem onClick={() => onMute?.(id)}>
-        {isMuted ? (
-          <>
-            <Bell className="h-4 w-4" />
-            Unmute
-          </>
-        ) : (
-          <>
-            <BellOff className="h-4 w-4" />
-            Mute
-          </>
-        )}
+      <ContextMenuSeparator />
+      <ContextMenuItem>
+        <UserCircle className="h-4 w-4" />
+        Contact info
       </ContextMenuItem>
-      <ContextMenuItem onClick={() => onArchive?.(id)}>
-        <Archive className="h-4 w-4" />
-        {isArchived ? "Unarchive" : "Archive"}
+      <ContextMenuItem>
+        <Upload className="h-4 w-4" />
+        Export chat
+      </ContextMenuItem>
+      <ContextMenuItem>
+        <X className="h-4 w-4" />
+        Clear chat
       </ContextMenuItem>
       <ContextMenuSeparator />
       <ContextMenuItem destructive onClick={() => onDelete?.(id)}>
         <Trash2 className="h-4 w-4" />
-        Delete
+        Delete chat
       </ContextMenuItem>
     </ContextMenuContent>
   );
@@ -176,9 +186,9 @@ export function ConversationItem({
   return (
     <ContextMenu menu={contextMenuContent}>
       <div className="relative overflow-hidden">
-        {/* Left action - Archive (swipe right) */}
+        {/* Left action - Unread (swipe right) */}
         <motion.div
-          className="absolute inset-y-0 left-0 flex items-center justify-center bg-amber-500"
+          className="absolute inset-y-0 left-0 flex items-center justify-center bg-green-500"
           style={{
             width: ACTION_WIDTH,
             opacity: leftActionOpacity,
@@ -187,23 +197,6 @@ export function ConversationItem({
           <motion.div
             className="flex flex-col items-center gap-1"
             style={{ scale: leftActionScale }}
-          >
-            <Archive className="h-5 w-5 text-white" />
-            <span className="text-xs font-medium text-white">Archive</span>
-          </motion.div>
-        </motion.div>
-
-        {/* Right action - Unread (swipe left) */}
-        <motion.div
-          className="absolute inset-y-0 right-0 flex items-center justify-center bg-blue-500"
-          style={{
-            width: ACTION_WIDTH,
-            opacity: rightActionOpacity,
-          }}
-        >
-          <motion.div
-            className="flex flex-col items-center gap-1"
-            style={{ scale: rightActionScale }}
           >
             {isMarkedUnread || unreadCount > 0 ? (
               <>
@@ -216,6 +209,23 @@ export function ConversationItem({
                 <span className="text-xs font-medium text-white">Unread</span>
               </>
             )}
+          </motion.div>
+        </motion.div>
+
+        {/* Right action - Archive (swipe left) */}
+        <motion.div
+          className="absolute inset-y-0 right-0 flex items-center justify-center bg-green-500"
+          style={{
+            width: ACTION_WIDTH,
+            opacity: rightActionOpacity,
+          }}
+        >
+          <motion.div
+            className="flex flex-col items-center gap-1"
+            style={{ scale: rightActionScale }}
+          >
+            <Archive className="h-5 w-5 text-white" />
+            <span className="text-xs font-medium text-white">Archive</span>
           </motion.div>
         </motion.div>
 
