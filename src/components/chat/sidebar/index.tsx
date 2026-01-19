@@ -23,7 +23,7 @@ export function Sidebar({ currentUserId }: SidebarProps) {
   const [isNewMessageOpen, setIsNewMessageOpen] = useState(false);
   const [contactInfoConversationId, setContactInfoConversationId] = useState<string | null>(null);
   const newMessageButtonRef = useRef<HTMLButtonElement>(null);
-  const { searchQuery, setSearchQuery, activeConversationId, setActiveConversationId, showArchived, setShowArchived } =
+  const { searchQuery, setSearchQuery, activeConversationId, setActiveConversationId, showArchived, setShowArchived, chatFilter, setChatFilter } =
     useChatStore();
   const { conversations, createConversation, isCreating } = useConversations();
 
@@ -79,7 +79,12 @@ export function Sidebar({ currentUserId }: SidebarProps) {
         isOpen={isNewMessageOpen}
         buttonRef={newMessageButtonRef}
       />
-      <SearchBar value={searchQuery} onChange={setSearchQuery} />
+      <SearchBar
+        value={searchQuery}
+        onChange={setSearchQuery}
+        filter={chatFilter}
+        onFilterChange={setChatFilter}
+      />
 
       {/* Archived header when viewing archived chats */}
       {showArchived ? (

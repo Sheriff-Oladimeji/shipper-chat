@@ -47,6 +47,10 @@ interface ChatState {
   // Archive view
   showArchived: boolean;
   setShowArchived: (show: boolean) => void;
+
+  // Filter
+  chatFilter: "all" | "archived" | "read" | "unread";
+  setChatFilter: (filter: "all" | "archived" | "read" | "unread") => void;
 }
 
 export const useChatStore = create<ChatState>((set, get) => ({
@@ -189,4 +193,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
   // Archive view
   showArchived: false,
   setShowArchived: (show) => set({ showArchived: show }),
+
+  // Filter
+  chatFilter: "all",
+  setChatFilter: (filter) => set({ chatFilter: filter }),
 }));
