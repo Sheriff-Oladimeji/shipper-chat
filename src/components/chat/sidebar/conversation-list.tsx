@@ -189,6 +189,7 @@ export function ConversationList({
               name={otherUser.name}
               image={otherUser.image}
               lastMessage={lastMessage?.content}
+              lastMessageAttachments={lastMessage?.attachments}
               lastMessageTime={lastMessage?.createdAt}
               unreadCount={conversation.unreadCount}
               isOnline={onlineUsers.has(otherUser.id)}

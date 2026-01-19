@@ -51,6 +51,9 @@ export async function GET() {
       messages: {
         orderBy: { createdAt: "desc" },
         take: 1,
+        include: {
+          attachments: true,
+        },
       },
       settings: {
         where: {

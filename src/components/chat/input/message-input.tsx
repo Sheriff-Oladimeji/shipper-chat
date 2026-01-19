@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Smile, Paperclip, Mic, Send, Loader2, X, Trash2 } from "lucide-react";
+import { Smile, Paperclip, Mic, Send, Loader2, X, Trash2, Image, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUploadThing } from "@/lib/uploadthing-client";
 import data from "@emoji-mart/data";
@@ -42,12 +42,15 @@ export function MessageInput({
   const [message, setMessage] = useState("");
   const [pendingFiles, setPendingFiles] = useState<PendingFile[]>([]);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [showAttachmentMenu, setShowAttachmentMenu] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const mediaFileInputRef = useRef<HTMLInputElement>(null);
+  const documentFileInputRef = useRef<HTMLInputElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
+  const attachmentMenuRef = useRef<HTMLDivElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const recordingIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -86,18 +89,21 @@ export function MessageInput({
     },
   });
 
-  // Close emoji picker when clicking outside
+  // Close emoji picker and attachment menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (emojiPickerRef.current && !emojiPickerRef.current.contains(e.target as Node)) {
         setShowEmojiPicker(false);
       }
+      if (attachmentMenuRef.current && !attachmentMenuRef.current.contains(e.target as Node)) {
+        setShowAttachmentMenu(false);
+      }
     };
-    if (showEmojiPicker) {
+    if (showEmojiPicker || showAttachmentMenu) {
       document.addEventListener("mousedown", handleClickOutside);
       return () => document.removeEventListener("mousedown", handleClickOutside);
     }
-  }, [showEmojiPicker]);
+  }, [showEmojiPicker, showAttachmentMenu]);
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -119,9 +125,16 @@ export function MessageInput({
     // Start upload in background
     startUpload(Array.from(files));
 
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
+    // Reset the file inputs
+    if (mediaFileInputRef.current) {
+      mediaFileInputRef.current.value = "";
     }
+    if (documentFileInputRef.current) {
+      documentFileInputRef.current.value = "";
+    }
+
+    // Close the attachment menu
+    setShowAttachmentMenu(false);
   };
 
   const removeFile = (id: string) => {
@@ -436,12 +449,20 @@ export function MessageInput({
       {/* Main input area */}
       {!isRecording && (
         <div className="flex items-end gap-2 p-3">
-          {/* Hidden file input */}
+          {/* Hidden file inputs */}
           <input
-            ref={fileInputRef}
+            ref={mediaFileInputRef}
             type="file"
             multiple
-            accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx,.txt"
+            accept="image/*,video/*"
+            onChange={handleFileSelect}
+            className="hidden"
+          />
+          <input
+            ref={documentFileInputRef}
+            type="file"
+            multiple
+            accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.csv,.ppt,.pptx,.zip,.rar"
             onChange={handleFileSelect}
             className="hidden"
           />
@@ -505,17 +526,43 @@ export function MessageInput({
                 )}
               </div>
 
-              {/* Attachment button */}
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={stillUploading || disabled}
-              >
-                <Paperclip className="h-5 w-5 text-muted-foreground" />
-              </Button>
+              {/* Attachment button with dropdown */}
+              <div className="relative" ref={attachmentMenuRef}>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => setShowAttachmentMenu(!showAttachmentMenu)}
+                  disabled={stillUploading || disabled}
+                >
+                  <Paperclip className="h-5 w-5 text-muted-foreground" />
+                </Button>
+                {showAttachmentMenu && (
+                  <div className="absolute bottom-full right-0 mb-2 z-50 bg-background border rounded-lg shadow-lg overflow-hidden min-w-[180px]">
+                    <button
+                      type="button"
+                      onClick={() => mediaFileInputRef.current?.click()}
+                      className="flex items-center gap-3 w-full px-4 py-3 hover:bg-muted text-left transition-colors"
+                    >
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-purple-500">
+                        <Image className="h-4 w-4 text-white" />
+                      </div>
+                      <span className="text-sm font-medium">Photos & videos</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => documentFileInputRef.current?.click()}
+                      className="flex items-center gap-3 w-full px-4 py-3 hover:bg-muted text-left transition-colors"
+                    >
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-500">
+                        <FileText className="h-4 w-4 text-white" />
+                      </div>
+                      <span className="text-sm font-medium">Document</span>
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 

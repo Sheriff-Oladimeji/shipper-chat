@@ -29,11 +29,19 @@ import {
 } from "@/components/ui/context-menu";
 import { motion, useMotionValue, useTransform, PanInfo } from "framer-motion";
 
+interface Attachment {
+  id: string;
+  type: string;
+  name: string;
+  mimeType: string;
+}
+
 interface ConversationItemProps {
   id: string;
   name: string;
   image?: string | null;
   lastMessage?: string;
+  lastMessageAttachments?: Attachment[];
   lastMessageTime?: Date | string;
   unreadCount?: number;
   isOnline?: boolean;
@@ -52,6 +60,27 @@ interface ConversationItemProps {
   onClearChat?: (id: string) => void;
 }
 
+// Get preview text for attachments like WhatsApp
+function getAttachmentPreview(attachments: Attachment[]): string {
+  if (!attachments || attachments.length === 0) return "";
+
+  const attachment = attachments[0];
+  const count = attachments.length;
+
+  switch (attachment.type) {
+    case "audio":
+      return "🎤 Voice message";
+    case "image":
+      return count > 1 ? `📷 ${count} Photos` : "📷 Photo";
+    case "video":
+      return count > 1 ? `📹 ${count} Videos` : "📹 Video";
+    case "document":
+      return `📄 ${attachment.name}`;
+    default:
+      return `📎 ${attachment.name}`;
+  }
+}
+
 const SWIPE_THRESHOLD = 80;
 const ACTION_WIDTH = 80;
 
@@ -60,6 +89,7 @@ export function ConversationItem({
   name,
   image,
   lastMessage,
+  lastMessageAttachments,
   lastMessageTime,
   unreadCount = 0,
   isOnline = false,
@@ -289,7 +319,7 @@ export function ConversationItem({
                       "text-foreground font-medium"
                   )}
                 >
-                  {lastMessage || "No messages yet"}
+                  {lastMessage || getAttachmentPreview(lastMessageAttachments || []) || "No messages yet"}
                 </span>
               </div>
               {(unreadCount > 0 || isMarkedUnread) && (

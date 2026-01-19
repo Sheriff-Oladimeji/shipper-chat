@@ -3,7 +3,7 @@
 import React, { useState, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { Check, CheckCheck, Sparkles, Download, Play, Pause, Volume2 } from "lucide-react";
+import { Check, CheckCheck, Sparkles, Download, Play, Pause, Volume2, Clock } from "lucide-react";
 import type { Attachment } from "@/types";
 import {
   ContextMenu,
@@ -24,6 +24,7 @@ interface MessageBubbleProps {
   isOwn: boolean;
   isRead?: boolean;
   isDelivered?: boolean;
+  isPending?: boolean;
   isAiGenerated?: boolean;
   senderName?: string;
   senderImage?: string | null;
@@ -311,6 +312,7 @@ export function MessageBubble({
   isOwn,
   isRead = false,
   isDelivered = false,
+  isPending = false,
   isAiGenerated = false,
   senderName,
   senderImage,
@@ -420,7 +422,9 @@ export function MessageBubble({
               <span className="text-[10px]">{time}</span>
               {isOwn && (
                 <span className="ml-0.5">
-                  {isRead ? (
+                  {isPending ? (
+                    <Clock className="h-3.5 w-3.5" />
+                  ) : isRead ? (
                     <CheckCheck className="h-3.5 w-3.5 text-blue-300" />
                   ) : isDelivered ? (
                     <CheckCheck className="h-3.5 w-3.5" />

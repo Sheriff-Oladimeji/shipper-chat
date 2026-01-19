@@ -2,13 +2,8 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useChatStore } from "@/stores/chat-store";
-import { useEffect } from "react";
-import type { Message, Attachment } from "@/types";
-
-interface MessagesResponse {
-  data: Message[];
-  nextCursor: string | null;
-}
+import { useEffect, useCallback, useRef } from "react";
+import type { Message, Reaction } from "@/types";
 
 interface SendMessagePayload {
   content: string;
@@ -18,6 +13,12 @@ interface SendMessagePayload {
     size: number;
     mimeType: string;
   }>;
+}
+
+// Extended message type for optimistic updates
+interface OptimisticMessage extends Message {
+  isPending?: boolean;
+  tempId?: string;
 }
 
 async function fetchMessages(conversationId: string): Promise<Message[]> {
@@ -65,7 +66,8 @@ async function reactToMessage(messageId: string, emoji: string): Promise<{ actio
 
 export function useMessages(conversationId: string | null) {
   const queryClient = useQueryClient();
-  const { setMessages, addMessage } = useChatStore();
+  const { setMessages, addMessage, currentUser } = useChatStore();
+  const tempIdCounterRef = useRef(0);
 
   const {
     data: messages = [],
@@ -88,13 +90,68 @@ export function useMessages(conversationId: string | null) {
   const sendMutation = useMutation({
     mutationFn: (payload: SendMessagePayload) =>
       sendMessage(conversationId!, payload),
-    onSuccess: (newMessage) => {
-      if (conversationId) {
-        addMessage(conversationId, newMessage);
-        queryClient.invalidateQueries({ queryKey: ["messages", conversationId] });
-        queryClient.invalidateQueries({ queryKey: ["conversations"] });
-        queryClient.invalidateQueries({ queryKey: ["conversation-media", conversationId] });
+    // Optimistic update - add message immediately
+    onMutate: async (newMessagePayload) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ["messages", conversationId] });
+
+      // Snapshot previous messages
+      const previousMessages = queryClient.getQueryData<Message[]>(["messages", conversationId]);
+
+      // Generate temp ID
+      const tempId = `temp-${Date.now()}-${tempIdCounterRef.current++}`;
+
+      // Create optimistic message
+      const optimisticMessage: OptimisticMessage = {
+        id: tempId,
+        tempId,
+        content: newMessagePayload.content,
+        senderId: currentUser?.id || "",
+        receiverId: "", // Will be filled by server
+        conversationId: conversationId!,
+        isRead: false,
+        isDelivered: false,
+        isAiGenerated: false,
+        isPending: true,
+        createdAt: new Date(),
+        attachments: newMessagePayload.attachments?.map((att, idx) => ({
+          id: `temp-att-${idx}`,
+          messageId: tempId,
+          url: att.url,
+          name: att.name,
+          size: att.size,
+          type: att.mimeType.startsWith("image/") ? "image" :
+                att.mimeType.startsWith("video/") ? "video" :
+                att.mimeType.startsWith("audio/") ? "audio" : "document",
+          mimeType: att.mimeType,
+          createdAt: new Date(),
+        })),
+      };
+
+      // Optimistically update messages
+      queryClient.setQueryData<OptimisticMessage[]>(
+        ["messages", conversationId],
+        (old = []) => [...old, optimisticMessage]
+      );
+
+      return { previousMessages, tempId };
+    },
+    onError: (err, newMessage, context) => {
+      // Rollback on error
+      if (context?.previousMessages) {
+        queryClient.setQueryData(["messages", conversationId], context.previousMessages);
       }
+    },
+    onSuccess: (newMessage, variables, context) => {
+      // Replace optimistic message with real message
+      queryClient.setQueryData<Message[]>(
+        ["messages", conversationId],
+        (old = []) => old.map((msg) =>
+          (msg as OptimisticMessage).tempId === context?.tempId ? newMessage : msg
+        )
+      );
+      queryClient.invalidateQueries({ queryKey: ["conversations"] });
+      queryClient.invalidateQueries({ queryKey: ["conversation-media", conversationId] });
     },
   });
 
@@ -108,21 +165,78 @@ export function useMessages(conversationId: string | null) {
   const reactMutation = useMutation({
     mutationFn: ({ messageId, emoji }: { messageId: string; emoji: string }) =>
       reactToMessage(messageId, emoji),
-    onSuccess: () => {
+    // Optimistic update for reactions
+    onMutate: async ({ messageId, emoji }) => {
+      await queryClient.cancelQueries({ queryKey: ["messages", conversationId] });
+
+      const previousMessages = queryClient.getQueryData<Message[]>(["messages", conversationId]);
+
+      // Optimistically update reaction
+      queryClient.setQueryData<Message[]>(
+        ["messages", conversationId],
+        (old = []) => old.map((msg) => {
+          if (msg.id !== messageId) return msg;
+
+          const existingReactions = msg.reactions || [];
+          const userId = currentUser?.id || "";
+          const existingReaction = existingReactions.find(
+            (r) => r.userId === userId && r.emoji === emoji
+          );
+
+          if (existingReaction) {
+            // Remove reaction
+            return {
+              ...msg,
+              reactions: existingReactions.filter(
+                (r) => !(r.userId === userId && r.emoji === emoji)
+              ),
+            };
+          } else {
+            // Add reaction
+            const newReaction: Reaction = {
+              id: `temp-reaction-${Date.now()}`,
+              emoji,
+              userId,
+              messageId,
+              user: { id: userId, name: currentUser?.name || "" },
+            };
+            return {
+              ...msg,
+              reactions: [...existingReactions, newReaction],
+            };
+          }
+        })
+      );
+
+      return { previousMessages };
+    },
+    onError: (err, variables, context) => {
+      if (context?.previousMessages) {
+        queryClient.setQueryData(["messages", conversationId], context.previousMessages);
+      }
+    },
+    onSettled: () => {
+      // Refetch to ensure consistency
       queryClient.invalidateQueries({ queryKey: ["messages", conversationId] });
     },
   });
 
   return {
-    messages,
+    messages: messages as OptimisticMessage[],
     isLoading,
     error,
     refetch,
-    sendMessage: (content: string, attachments?: SendMessagePayload["attachments"]) =>
-      sendMutation.mutate({ content, attachments }),
+    sendMessage: useCallback(
+      (content: string, attachments?: SendMessagePayload["attachments"]) =>
+        sendMutation.mutate({ content, attachments }),
+      [sendMutation]
+    ),
     isSending: sendMutation.isPending,
     markAllRead: markReadMutation.mutate,
-    reactToMessage: (messageId: string, emoji: string) =>
-      reactMutation.mutate({ messageId, emoji }),
+    reactToMessage: useCallback(
+      (messageId: string, emoji: string) =>
+        reactMutation.mutate({ messageId, emoji }),
+      [reactMutation]
+    ),
   };
 }
