@@ -28,6 +28,7 @@ interface UploadedFile {
 
 interface MessageInputProps {
   onSend: (message: string, attachments?: UploadedFile[]) => void;
+  onSendVoiceNote?: (file: File) => void; // For immediate voice note sending
   onTyping?: (isTyping: boolean) => void;
   isSending?: boolean;
   disabled?: boolean;
@@ -35,6 +36,7 @@ interface MessageInputProps {
 
 export function MessageInput({
   onSend,
+  onSendVoiceNote,
   onTyping,
   isSending = false,
   disabled = false,
@@ -58,7 +60,7 @@ export function MessageInput({
   const { startUpload } = useUploadThing("messageAttachment", {
     onClientUploadComplete: (res) => {
       if (res && res.length > 0) {
-        // Update pending files with uploaded URLs
+        // Update pending files with uploaded URLs (for non-voice attachments)
         setPendingFiles((prev) => {
           const updated = [...prev];
           res.forEach((uploadedFile) => {
@@ -214,22 +216,26 @@ export function MessageInput({
         const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
         const file = new File([audioBlob], `voice-note-${Date.now()}.webm`, { type: "audio/webm" });
 
-        // Add to pending files with uploading state
-        const pendingFile: PendingFile = {
-          id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          file,
-          name: file.name,
-          size: file.size,
-          mimeType: "audio/webm",
-          status: "uploading",
-        };
-        setPendingFiles((prev) => [...prev, pendingFile]);
-
-        // Upload the voice note
-        startUpload([file]);
-
         // Stop all tracks
         stream.getTracks().forEach((track) => track.stop());
+
+        // Send voice note immediately (shows in chat, uploads in background)
+        if (onSendVoiceNote) {
+          onSendVoiceNote(file);
+        } else {
+          // Fallback: upload then send
+          const uploadResult = await startUpload([file]);
+          if (uploadResult && uploadResult.length > 0) {
+            const uploaded = uploadResult[0];
+            const fileUrl = uploaded.ufsUrl || uploaded.url;
+            onSend("", [{
+              url: fileUrl,
+              name: file.name,
+              size: file.size,
+              mimeType: "audio/webm",
+            }]);
+          }
+        }
       };
 
       mediaRecorder.start();

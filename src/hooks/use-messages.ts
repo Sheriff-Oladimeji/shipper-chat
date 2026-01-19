@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useChatStore } from "@/stores/chat-store";
 import { useEffect, useCallback, useRef } from "react";
+import { useUploadThing } from "@/lib/upload/uploadthing-client";
 import type { Message, Reaction } from "@/types";
 
 interface SendMessagePayload {
@@ -13,6 +14,13 @@ interface SendMessagePayload {
     size: number;
     mimeType: string;
   }>;
+}
+
+interface VoiceNoteAttachment {
+  url: string;
+  name: string;
+  size: number;
+  mimeType: string;
 }
 
 // Extended message type for optimistic updates
@@ -68,6 +76,7 @@ export function useMessages(conversationId: string | null) {
   const queryClient = useQueryClient();
   const { setMessages, addMessage, currentUser } = useChatStore();
   const tempIdCounterRef = useRef(0);
+  const { startUpload } = useUploadThing("messageAttachment");
 
   const {
     data: messages = [],
@@ -221,6 +230,88 @@ export function useMessages(conversationId: string | null) {
     },
   });
 
+  // Voice note: show immediately in chat, upload in background
+  const sendVoiceNote = useCallback(async (file: File) => {
+    if (!conversationId || !currentUser) return;
+
+    const tempId = `temp-voice-${Date.now()}-${tempIdCounterRef.current++}`;
+    const localUrl = URL.createObjectURL(file);
+
+    // Add optimistic message immediately
+    const optimisticMessage: OptimisticMessage = {
+      id: tempId,
+      tempId,
+      content: "",
+      senderId: currentUser.id,
+      receiverId: "",
+      conversationId: conversationId,
+      isRead: false,
+      isDelivered: false,
+      isAiGenerated: false,
+      isPending: true,
+      createdAt: new Date(),
+      attachments: [{
+        id: `temp-att-voice`,
+        messageId: tempId,
+        url: localUrl,
+        name: file.name,
+        size: file.size,
+        type: "audio",
+        mimeType: "audio/webm",
+        createdAt: new Date(),
+      }],
+    };
+
+    // Show in chat immediately
+    queryClient.setQueryData<OptimisticMessage[]>(
+      ["messages", conversationId],
+      (old = []) => [...old, optimisticMessage]
+    );
+
+    try {
+      // Upload in background
+      const uploadResult = await startUpload([file]);
+
+      if (uploadResult && uploadResult.length > 0) {
+        const uploaded = uploadResult[0];
+        const fileUrl = uploaded.ufsUrl || uploaded.url;
+
+        // Send to server with real URL
+        const realMessage = await sendMessage(conversationId, {
+          content: "",
+          attachments: [{
+            url: fileUrl,
+            name: file.name,
+            size: file.size,
+            mimeType: "audio/webm",
+          }],
+        });
+
+        // Replace optimistic with real message
+        queryClient.setQueryData<Message[]>(
+          ["messages", conversationId],
+          (old = []) => old.map((msg) =>
+            (msg as OptimisticMessage).tempId === tempId ? realMessage : msg
+          )
+        );
+
+        // Cleanup local URL
+        URL.revokeObjectURL(localUrl);
+
+        // Refresh conversations list
+        queryClient.invalidateQueries({ queryKey: ["conversations"] });
+      }
+    } catch (error) {
+      console.error("Voice note send failed:", error);
+      // Remove failed message
+      queryClient.setQueryData<Message[]>(
+        ["messages", conversationId],
+        (old = []) => old.filter((msg) => (msg as OptimisticMessage).tempId !== tempId)
+      );
+      URL.revokeObjectURL(localUrl);
+    }
+  }, [conversationId, currentUser, queryClient, startUpload]);
+
   return {
     messages: messages as OptimisticMessage[],
     isLoading,
@@ -231,6 +322,7 @@ export function useMessages(conversationId: string | null) {
         sendMutation.mutate({ content, attachments }),
       [sendMutation]
     ),
+    sendVoiceNote,
     isSending: sendMutation.isPending,
     markAllRead: markReadMutation.mutate,
     reactToMessage: useCallback(

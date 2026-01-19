@@ -22,7 +22,7 @@ export function ConversationView({
   currentUserId,
 }: ConversationViewProps) {
   const [isContactInfoOpen, setIsContactInfoOpen] = useState(false);
-  const { messages, isLoading, sendMessage, isSending, markAllRead, reactToMessage } =
+  const { messages, isLoading, sendMessage, sendVoiceNote, isSending, markAllRead, reactToMessage } =
     useMessages(conversationId);
   const { sendTypingIndicator } = useConversationChannel(conversationId);
   const { typingUsers, onlineUsers } = useChatStore();
@@ -61,6 +61,7 @@ export function ConversationView({
       />
       <MessageInput
         onSend={handleSendMessage}
+        onSendVoiceNote={sendVoiceNote}
         onTyping={sendTypingIndicator}
         isSending={isSending}
       />
