@@ -57,6 +57,16 @@ export async function GET(
         },
       },
       attachments: true,
+      reactions: {
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+      },
     },
   });
 

@@ -2,6 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 
+// Consider a user online if they were active in the last 5 minutes
+const ONLINE_THRESHOLD_MS = 5 * 60 * 1000;
+
+function isUserOnline(lastSeenAt: Date | null): boolean {
+  if (!lastSeenAt) return false;
+  return Date.now() - new Date(lastSeenAt).getTime() < ONLINE_THRESHOLD_MS;
+}
+
 export async function GET() {
   const currentUser = await getCurrentUser();
 
@@ -56,9 +64,17 @@ export async function GET() {
     },
   });
 
-  // Map conversations with last message and settings
+  // Map conversations with last message, settings, and computed online status
   const conversationsWithDetails = conversations.map((conv) => ({
     ...conv,
+    user1: {
+      ...conv.user1,
+      isOnline: isUserOnline(conv.user1.lastSeenAt),
+    },
+    user2: {
+      ...conv.user2,
+      isOnline: isUserOnline(conv.user2.lastSeenAt),
+    },
     lastMessage: conv.messages[0] || null,
     unreadCount: 0, // TODO: Optimize with a single query
     settings: conv.settings[0] || null,

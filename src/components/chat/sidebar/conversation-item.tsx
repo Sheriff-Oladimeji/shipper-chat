@@ -10,10 +10,12 @@ import {
   Mail,
   MailOpen,
   BellOff,
-  Bell,
-  Pin,
-  PinOff,
   Trash2,
+  MessageCircle,
+  Volume2,
+  UserCircle,
+  Upload,
+  X,
 } from "lucide-react";
 import { useState, useCallback } from "react";
 import {
@@ -21,8 +23,11 @@ import {
   ContextMenuContent,
   ContextMenuItem,
   ContextMenuSeparator,
+  ContextMenuSub,
+  ContextMenuSubTrigger,
+  ContextMenuSubContent,
 } from "@/components/ui/context-menu";
-import { motion, useMotionValue, useTransform, useAnimation, PanInfo } from "framer-motion";
+import { motion, useMotionValue, useTransform, PanInfo } from "framer-motion";
 
 interface ConversationItemProps {
   id: string;
@@ -38,13 +43,13 @@ interface ConversationItemProps {
   isArchived?: boolean;
   isMarkedUnread?: boolean;
   isMuted?: boolean;
-  isPinned?: boolean;
   onClick: () => void;
   onArchive?: (id: string) => void;
   onMarkUnread?: (id: string) => void;
-  onMute?: (id: string) => void;
-  onPin?: (id: string) => void;
+  onMute?: (id: string, duration?: string) => void;
   onDelete?: (id: string) => void;
+  onContactInfo?: (id: string) => void;
+  onClearChat?: (id: string) => void;
 }
 
 const SWIPE_THRESHOLD = 80;
@@ -64,23 +69,22 @@ export function ConversationItem({
   isArchived = false,
   isMarkedUnread = false,
   isMuted = false,
-  isPinned = false,
   onClick,
   onArchive,
   onMarkUnread,
   onMute,
-  onPin,
   onDelete,
+  onContactInfo,
+  onClearChat,
 }: ConversationItemProps) {
   const [isDragging, setIsDragging] = useState(false);
   const x = useMotionValue(0);
-  const controls = useAnimation();
 
-  // Transform for left action (Archive) - appears when swiping right
+  // Transform for left action (Unread) - appears when swiping right
   const leftActionOpacity = useTransform(x, [0, ACTION_WIDTH / 2, ACTION_WIDTH], [0, 0.5, 1]);
   const leftActionScale = useTransform(x, [0, ACTION_WIDTH], [0.8, 1]);
 
-  // Transform for right action (Unread) - appears when swiping left
+  // Transform for right action (Archive) - appears when swiping left
   const rightActionOpacity = useTransform(x, [-ACTION_WIDTH, -ACTION_WIDTH / 2, 0], [1, 0.5, 0]);
   const rightActionScale = useTransform(x, [-ACTION_WIDTH, 0], [1, 0.8]);
 
@@ -92,7 +96,7 @@ export function ConversationItem({
     setIsDragging(true);
   };
 
-  const handleDragEnd = async (_: unknown, info: PanInfo) => {
+  const handleDragEnd = (_: unknown, info: PanInfo) => {
     const offset = info.offset.x;
     const velocity = info.velocity.x;
 
@@ -100,20 +104,16 @@ export function ConversationItem({
     const shouldTriggerRight = offset > SWIPE_THRESHOLD || (offset > 40 && velocity > 500);
     const shouldTriggerLeft = offset < -SWIPE_THRESHOLD || (offset < -40 && velocity < -500);
 
-    if (shouldTriggerRight && onArchive) {
-      // Animate out to the right, then snap back
-      await controls.start({ x: ACTION_WIDTH + 20, transition: { duration: 0.1 } });
-      onArchive(id);
-      await controls.start({ x: 0, transition: { duration: 0.2 } });
-    } else if (shouldTriggerLeft && onMarkUnread) {
-      // Animate out to the left, then snap back
-      await controls.start({ x: -ACTION_WIDTH - 20, transition: { duration: 0.1 } });
+    if (shouldTriggerRight && onMarkUnread) {
+      // Swipe right = Mark unread
       onMarkUnread(id);
-      await controls.start({ x: 0, transition: { duration: 0.2 } });
-    } else {
-      // Snap back to center
-      controls.start({ x: 0, transition: { type: "spring", stiffness: 500, damping: 30 } });
+    } else if (shouldTriggerLeft && onArchive) {
+      // Swipe left = Archive
+      onArchive(id);
     }
+
+    // Always snap back to center using x.set for immediate response
+    x.set(0);
 
     // Small delay before re-enabling clicks
     setTimeout(() => setIsDragging(false), 50);
@@ -128,52 +128,55 @@ export function ConversationItem({
   const contextMenuContent = (
     <ContextMenuContent>
       <ContextMenuItem onClick={() => onMarkUnread?.(id)}>
-        {isMarkedUnread || unreadCount > 0 ? (
-          <>
-            <MailOpen className="h-4 w-4" />
-            Mark as read
-          </>
-        ) : (
-          <>
-            <Mail className="h-4 w-4" />
-            Mark as unread
-          </>
-        )}
-      </ContextMenuItem>
-      <ContextMenuItem onClick={() => onPin?.(id)}>
-        {isPinned ? (
-          <>
-            <PinOff className="h-4 w-4" />
-            Unpin
-          </>
-        ) : (
-          <>
-            <Pin className="h-4 w-4" />
-            Pin
-          </>
-        )}
-      </ContextMenuItem>
-      <ContextMenuItem onClick={() => onMute?.(id)}>
-        {isMuted ? (
-          <>
-            <Bell className="h-4 w-4" />
-            Unmute
-          </>
-        ) : (
-          <>
-            <BellOff className="h-4 w-4" />
-            Mute
-          </>
-        )}
+        <MessageCircle className="h-4 w-4" />
+        {isMarkedUnread || unreadCount > 0 ? "Mark as read" : "Mark as unread"}
       </ContextMenuItem>
       <ContextMenuItem onClick={() => onArchive?.(id)}>
         <Archive className="h-4 w-4" />
         {isArchived ? "Unarchive" : "Archive"}
       </ContextMenuItem>
+      <ContextMenuSub>
+        <ContextMenuSubTrigger>
+          <Volume2 className="h-4 w-4" />
+          {isMuted ? "Unmute" : "Mute"}
+        </ContextMenuSubTrigger>
+        <ContextMenuSubContent>
+          {isMuted ? (
+            <ContextMenuItem onClick={() => onMute?.(id, "unmute")}>
+              Unmute notifications
+            </ContextMenuItem>
+          ) : (
+            <>
+              <ContextMenuItem onClick={() => onMute?.(id, "8hours")}>
+                8 hours
+              </ContextMenuItem>
+              <ContextMenuItem onClick={() => onMute?.(id, "1week")}>
+                1 week
+              </ContextMenuItem>
+              <ContextMenuItem onClick={() => onMute?.(id, "always")}>
+                Always
+              </ContextMenuItem>
+            </>
+          )}
+        </ContextMenuSubContent>
+      </ContextMenuSub>
+      <ContextMenuSeparator />
+      <ContextMenuItem onClick={() => onContactInfo?.(id)}>
+        <UserCircle className="h-4 w-4" />
+        Contact info
+      </ContextMenuItem>
+      <ContextMenuItem>
+        <Upload className="h-4 w-4" />
+        Export chat
+      </ContextMenuItem>
+      <ContextMenuItem onClick={() => onClearChat?.(id)}>
+        <X className="h-4 w-4" />
+        Clear chat
+      </ContextMenuItem>
       <ContextMenuSeparator />
       <ContextMenuItem destructive onClick={() => onDelete?.(id)}>
         <Trash2 className="h-4 w-4" />
-        Delete
+        Delete chat
       </ContextMenuItem>
     </ContextMenuContent>
   );
@@ -181,9 +184,9 @@ export function ConversationItem({
   return (
     <ContextMenu menu={contextMenuContent}>
       <div className="relative overflow-hidden">
-        {/* Left action - Archive (swipe right) */}
+        {/* Left action - Unread (swipe right) */}
         <motion.div
-          className="absolute inset-y-0 left-0 flex items-center justify-center bg-amber-500"
+          className="absolute inset-y-0 left-0 flex items-center justify-center bg-green-500"
           style={{
             width: ACTION_WIDTH,
             opacity: leftActionOpacity,
@@ -192,23 +195,6 @@ export function ConversationItem({
           <motion.div
             className="flex flex-col items-center gap-1"
             style={{ scale: leftActionScale }}
-          >
-            <Archive className="h-5 w-5 text-white" />
-            <span className="text-xs font-medium text-white">Archive</span>
-          </motion.div>
-        </motion.div>
-
-        {/* Right action - Unread (swipe left) */}
-        <motion.div
-          className="absolute inset-y-0 right-0 flex items-center justify-center bg-blue-500"
-          style={{
-            width: ACTION_WIDTH,
-            opacity: rightActionOpacity,
-          }}
-        >
-          <motion.div
-            className="flex flex-col items-center gap-1"
-            style={{ scale: rightActionScale }}
           >
             {isMarkedUnread || unreadCount > 0 ? (
               <>
@@ -224,14 +210,31 @@ export function ConversationItem({
           </motion.div>
         </motion.div>
 
+        {/* Right action - Archive (swipe left) */}
+        <motion.div
+          className="absolute inset-y-0 right-0 flex items-center justify-center bg-green-500"
+          style={{
+            width: ACTION_WIDTH,
+            opacity: rightActionOpacity,
+          }}
+        >
+          <motion.div
+            className="flex flex-col items-center gap-1"
+            style={{ scale: rightActionScale }}
+          >
+            <Archive className="h-5 w-5 text-white" />
+            <span className="text-xs font-medium text-white">Archive</span>
+          </motion.div>
+        </motion.div>
+
         {/* Main content - draggable */}
         <motion.button
           drag="x"
           dragConstraints={{ left: -ACTION_WIDTH, right: ACTION_WIDTH }}
           dragElastic={0.1}
+          dragMomentum={false}
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
-          animate={controls}
           style={{ x }}
           onClick={handleClick}
           className={cn(
@@ -250,9 +253,6 @@ export function ConversationItem({
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1.5 min-w-0">
-                {isPinned && (
-                  <Pin className="h-3 w-3 text-muted-foreground shrink-0" />
-                )}
                 <span
                   className={cn(
                     "font-medium text-foreground truncate",

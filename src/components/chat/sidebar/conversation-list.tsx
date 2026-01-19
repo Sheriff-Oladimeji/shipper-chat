@@ -5,6 +5,7 @@ import { ConversationItem } from "./conversation-item";
 import type { ConversationWithDetails } from "@/types";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
+import { useChatStore } from "@/stores/chat-store";
 
 interface ConversationListProps {
   conversations: ConversationWithDetails[];
@@ -54,6 +55,7 @@ export function ConversationList({
   onSelectConversation,
 }: ConversationListProps) {
   const queryClient = useQueryClient();
+  const { onlineUsers } = useChatStore();
 
   const settingsMutation = useMutation({
     mutationFn: ({
@@ -106,27 +108,25 @@ export function ConversationList({
   );
 
   const handleMute = useCallback(
-    (id: string) => {
-      const conversation = conversations.find((c) => c.id === id);
-      const isCurrentlyMuted = conversation?.settings?.isMuted || false;
+    (id: string, duration?: string) => {
+      // If duration is "unmute", unmute the conversation
+      const shouldMute = duration !== "unmute";
       settingsMutation.mutate({
         id,
-        settings: { isMuted: !isCurrentlyMuted },
+        settings: { isMuted: shouldMute },
       });
     },
-    [conversations, settingsMutation]
+    [settingsMutation]
   );
 
-  const handlePin = useCallback(
+  const handleClearChat = useCallback(
     (id: string) => {
-      const conversation = conversations.find((c) => c.id === id);
-      const isCurrentlyPinned = conversation?.settings?.isPinned || false;
-      settingsMutation.mutate({
-        id,
-        settings: { isPinned: !isCurrentlyPinned },
-      });
+      if (confirm("Are you sure you want to clear this chat? All messages will be deleted.")) {
+        // TODO: Implement clear chat API
+        console.log("Clear chat:", id);
+      }
     },
-    [conversations, settingsMutation]
+    []
   );
 
   const handleDelete = useCallback(
@@ -191,20 +191,19 @@ export function ConversationList({
               lastMessage={lastMessage?.content}
               lastMessageTime={lastMessage?.createdAt}
               unreadCount={conversation.unreadCount}
-              isOnline={otherUser.isOnline}
+              isOnline={onlineUsers.has(otherUser.id)}
               isActive={conversation.id === activeConversationId}
               isRead={lastMessage?.isRead}
               isSentByMe={isSentByMe}
               isArchived={conversation.settings?.isArchived}
               isMarkedUnread={conversation.settings?.isMarkedUnread}
               isMuted={conversation.settings?.isMuted}
-              isPinned={conversation.settings?.isPinned}
               onClick={() => onSelectConversation(conversation.id)}
               onArchive={handleArchive}
               onMarkUnread={handleMarkUnread}
               onMute={handleMute}
-              onPin={handlePin}
               onDelete={handleDelete}
+              onClearChat={handleClearChat}
             />
           );
         })}
