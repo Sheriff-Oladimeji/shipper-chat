@@ -41,7 +41,7 @@ export default function ConversationPage() {
 
   if (isLoading) {
     return (
-      <div className="flex h-full flex-col">
+      <div className="flex h-full flex-col bg-[#F3F3EE] rounded-2xl m-3 overflow-hidden border">
         {/* Header skeleton */}
         <div className="flex items-center justify-between px-4 py-3 border-b bg-card">
           <div className="flex items-center gap-3">

@@ -128,6 +128,7 @@ export function ContactInfoPanel({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         transparent
+        rounded
         className="w-[360px] sm:max-w-[360px] p-0 gap-0 [&>button]:hidden"
         side="right"
       >

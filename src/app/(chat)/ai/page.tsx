@@ -78,9 +78,9 @@ export default function AIChat() {
   }, []);
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full flex-col bg-[#F3F3EE] rounded-2xl m-3 overflow-hidden border">
       {/* Header */}
-      <div className="flex items-center gap-3 border-b px-4 py-3">
+      <div className="flex items-center gap-3 border-b px-4 py-3 bg-card">
         <Image
           src="/logo.svg"
           alt="Shipper AI"

@@ -44,7 +44,7 @@ export function ConversationView({
   };
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full flex-col bg-[#F3F3EE] rounded-2xl m-3 overflow-hidden border">
       <ConversationHeader
         name={otherUser.name}
         image={otherUser.image}
