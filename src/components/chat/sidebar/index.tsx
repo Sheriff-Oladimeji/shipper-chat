@@ -1,15 +1,17 @@
 "use client";
 
-import { useState, useRef, useMemo } from "react";
+import { useState, useRef, useMemo, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { SidebarHeader } from "./sidebar-header";
 import { SearchBar } from "./search-bar";
 import { ConversationList } from "./conversation-list";
 import { NewMessageDropdown } from "./new-message-dropdown";
+import { ContactInfoPanel } from "../contact-info-panel";
 import { useChatStore } from "@/stores/chat-store";
 import { useConversations } from "@/hooks/use-conversations";
 import { Sparkles, Archive, ChevronLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
+import type { User } from "@/types";
 
 interface SidebarProps {
   currentUserId: string;
@@ -20,10 +22,24 @@ export function Sidebar({ currentUserId }: SidebarProps) {
   const pathname = usePathname();
   const [isNewMessageOpen, setIsNewMessageOpen] = useState(false);
   const [showArchived, setShowArchived] = useState(false);
+  const [contactInfoConversationId, setContactInfoConversationId] = useState<string | null>(null);
   const newMessageButtonRef = useRef<HTMLButtonElement>(null);
   const { searchQuery, setSearchQuery, activeConversationId, setActiveConversationId } =
     useChatStore();
   const { conversations, createConversation, isCreating } = useConversations();
+
+  // Get the user and conversation for contact info panel
+  const contactInfoData = useMemo(() => {
+    if (!contactInfoConversationId) return null;
+    const conversation = conversations.find(c => c.id === contactInfoConversationId);
+    if (!conversation) return null;
+    const otherUser = conversation.user1Id === currentUserId ? conversation.user2 : conversation.user1;
+    return { user: otherUser as User, conversationId: contactInfoConversationId };
+  }, [contactInfoConversationId, conversations, currentUserId]);
+
+  const handleContactInfo = useCallback((conversationId: string) => {
+    setContactInfoConversationId(conversationId);
+  }, []);
 
   // Count archived conversations
   const archivedCount = useMemo(() => {
@@ -127,6 +143,7 @@ export function Sidebar({ currentUserId }: SidebarProps) {
         searchQuery={searchQuery}
         showArchived={showArchived}
         onSelectConversation={handleSelectConversation}
+        onContactInfo={handleContactInfo}
       />
 
       <NewMessageDropdown
@@ -137,6 +154,16 @@ export function Sidebar({ currentUserId }: SidebarProps) {
         isCreating={isCreating}
         anchorRef={newMessageButtonRef}
       />
+
+      {/* Contact Info Panel */}
+      {contactInfoData && (
+        <ContactInfoPanel
+          open={!!contactInfoConversationId}
+          onOpenChange={(open) => !open && setContactInfoConversationId(null)}
+          user={contactInfoData.user}
+          conversationId={contactInfoData.conversationId}
+        />
+      )}
     </aside>
   );
 }

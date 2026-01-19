@@ -14,6 +14,7 @@ interface ConversationListProps {
   searchQuery: string;
   showArchived?: boolean;
   onSelectConversation: (id: string) => void;
+  onContactInfo?: (id: string) => void;
 }
 
 async function updateConversationSettings(
@@ -53,6 +54,7 @@ export function ConversationList({
   searchQuery,
   showArchived = false,
   onSelectConversation,
+  onContactInfo,
 }: ConversationListProps) {
   const queryClient = useQueryClient();
   const { onlineUsers } = useChatStore();
@@ -189,6 +191,7 @@ export function ConversationList({
               name={otherUser.name}
               image={otherUser.image}
               lastMessage={lastMessage?.content}
+              lastMessageAttachments={lastMessage?.attachments}
               lastMessageTime={lastMessage?.createdAt}
               unreadCount={conversation.unreadCount}
               isOnline={onlineUsers.has(otherUser.id)}
@@ -204,6 +207,7 @@ export function ConversationList({
               onMute={handleMute}
               onDelete={handleDelete}
               onClearChat={handleClearChat}
+              onContactInfo={onContactInfo}
             />
           );
         })}

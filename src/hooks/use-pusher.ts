@@ -72,7 +72,7 @@ export function usePusher(userId: string | undefined) {
 
 export function useConversationChannel(conversationId: string | null) {
   const queryClient = useQueryClient();
-  const { addMessage, setUserTyping, updateMessage } = useChatStore();
+  const { addMessage, setUserTyping, updateMessage, markAllMessagesRead } = useChatStore();
   const channelRef = useRef<Channel | null>(null);
   const pusherRef = useRef<PusherClient | null>(null);
 
@@ -100,10 +100,25 @@ export function useConversationChannel(conversationId: string | null) {
     });
 
     channel.bind(PUSHER_EVENTS.MESSAGE_READ, (data: { messageId?: string; conversationId?: string; readBy: string }) => {
+      // Update React Query cache directly for instant UI update
+      queryClient.setQueryData<Message[]>(
+        ["messages", conversationId],
+        (oldMessages = []) => oldMessages.map((msg) => {
+          if (data.messageId) {
+            // Single message read
+            return msg.id === data.messageId ? { ...msg, isRead: true } : msg;
+          } else {
+            // All messages sent to readBy user are now read
+            return msg.receiverId === data.readBy ? { ...msg, isRead: true } : msg;
+          }
+        })
+      );
+      // Also update store for consistency
       if (data.messageId) {
         updateMessage(conversationId, data.messageId, { isRead: true });
+      } else if (data.conversationId) {
+        markAllMessagesRead(conversationId, data.readBy);
       }
-      queryClient.invalidateQueries({ queryKey: ["messages", conversationId] });
     });
 
     return () => {
@@ -112,7 +127,7 @@ export function useConversationChannel(conversationId: string | null) {
         pusherRef.current.unsubscribe(getConversationChannel(conversationId));
       }
     };
-  }, [conversationId, addMessage, setUserTyping, updateMessage, queryClient]);
+  }, [conversationId, addMessage, setUserTyping, updateMessage, markAllMessagesRead, queryClient]);
 
   const sendTypingIndicator = useCallback(
     async (isTyping: boolean) => {

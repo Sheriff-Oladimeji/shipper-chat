@@ -9,8 +9,12 @@ import { Loader2 } from "lucide-react";
 import { format, isSameDay } from "date-fns";
 import type { Message } from "@/types";
 
+interface OptimisticMessage extends Message {
+  isPending?: boolean;
+}
+
 interface MessageListProps {
-  messages: Message[];
+  messages: OptimisticMessage[];
   currentUserId: string;
   typingUserNames: string[];
   isLoading?: boolean;
@@ -74,6 +78,7 @@ export function MessageList({
                 isOwn={message.senderId === currentUserId}
                 isRead={message.isRead}
                 isDelivered={message.isDelivered}
+                isPending={message.isPending}
                 isAiGenerated={message.isAiGenerated}
                 attachments={message.attachments}
                 senderImage={message.sender?.image}
