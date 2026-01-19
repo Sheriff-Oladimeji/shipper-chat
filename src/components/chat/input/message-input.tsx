@@ -2,11 +2,22 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Smile, Paperclip, Mic, Send, Loader2, X, FileText, Square } from "lucide-react";
+import { Smile, Paperclip, Mic, Send, Loader2, X, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUploadThing } from "@/lib/uploadthing-client";
 import data from "@emoji-mart/data";
 import Picker from "@emoji-mart/react";
+
+interface PendingFile {
+  id: string;
+  file: File;
+  url?: string; // Local preview URL or uploaded URL
+  name: string;
+  size: number;
+  mimeType: string;
+  status: "uploading" | "uploaded" | "error";
+  progress?: number;
+}
 
 interface UploadedFile {
   url: string;
@@ -29,8 +40,7 @@ export function MessageInput({
   disabled = false,
 }: MessageInputProps) {
   const [message, setMessage] = useState("");
-  const [pendingFiles, setPendingFiles] = useState<UploadedFile[]>([]);
-  const [isUploading, setIsUploading] = useState(false);
+  const [pendingFiles, setPendingFiles] = useState<PendingFile[]>([]);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
@@ -45,22 +55,34 @@ export function MessageInput({
   const { startUpload } = useUploadThing("messageAttachment", {
     onClientUploadComplete: (res) => {
       if (res && res.length > 0) {
-        const newFiles = res.map((file) => {
-          const fileUrl = file.ufsUrl || file.url;
-          return {
-            url: fileUrl,
-            name: file.name,
-            size: file.size,
-            mimeType: file.type || "application/octet-stream",
-          };
+        // Update pending files with uploaded URLs
+        setPendingFiles((prev) => {
+          const updated = [...prev];
+          res.forEach((uploadedFile) => {
+            const fileUrl = uploadedFile.ufsUrl || uploadedFile.url;
+            const index = updated.findIndex(
+              (f) => f.name === uploadedFile.name && f.status === "uploading"
+            );
+            if (index !== -1) {
+              updated[index] = {
+                ...updated[index],
+                url: fileUrl,
+                status: "uploaded",
+              };
+            }
+          });
+          return updated;
         });
-        setPendingFiles((prev) => [...prev, ...newFiles]);
       }
-      setIsUploading(false);
     },
     onUploadError: (error) => {
       console.error("Upload error:", error);
-      setIsUploading(false);
+      // Mark files as error
+      setPendingFiles((prev) =>
+        prev.map((f) =>
+          f.status === "uploading" ? { ...f, status: "error" as const } : f
+        )
+      );
     },
   });
 
@@ -81,16 +103,36 @@ export function MessageInput({
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
-    setIsUploading(true);
-    await startUpload(Array.from(files));
+    // Create pending file entries with local preview URLs
+    const newPendingFiles: PendingFile[] = Array.from(files).map((file) => ({
+      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      file,
+      url: file.type.startsWith("image/") ? URL.createObjectURL(file) : undefined,
+      name: file.name,
+      size: file.size,
+      mimeType: file.type || "application/octet-stream",
+      status: "uploading" as const,
+    }));
+
+    setPendingFiles((prev) => [...prev, ...newPendingFiles]);
+
+    // Start upload in background
+    startUpload(Array.from(files));
 
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
   };
 
-  const removeFile = (index: number) => {
-    setPendingFiles((prev) => prev.filter((_, i) => i !== index));
+  const removeFile = (id: string) => {
+    setPendingFiles((prev) => {
+      const file = prev.find((f) => f.id === id);
+      // Revoke object URL if it was a local preview
+      if (file?.url?.startsWith("blob:")) {
+        URL.revokeObjectURL(file.url);
+      }
+      return prev.filter((f) => f.id !== id);
+    });
   };
 
   const handleTyping = useCallback(() => {
@@ -107,11 +149,30 @@ export function MessageInput({
 
   const handleSubmit = (e?: React.FormEvent) => {
     e?.preventDefault();
-    if ((!message.trim() && pendingFiles.length === 0) || isSending || disabled || isUploading) return;
 
-    onSend(message.trim(), pendingFiles.length > 0 ? pendingFiles : undefined);
+    const uploadedFiles = pendingFiles.filter((f) => f.status === "uploaded");
+    const stillUploading = pendingFiles.some((f) => f.status === "uploading");
+
+    if ((!message.trim() && uploadedFiles.length === 0) || isSending || disabled || stillUploading) return;
+
+    const attachments = uploadedFiles.map((f) => ({
+      url: f.url!,
+      name: f.name,
+      size: f.size,
+      mimeType: f.mimeType,
+    }));
+
+    onSend(message.trim(), attachments.length > 0 ? attachments : undefined);
     setMessage("");
+
+    // Clean up object URLs
+    pendingFiles.forEach((f) => {
+      if (f.url?.startsWith("blob:")) {
+        URL.revokeObjectURL(f.url);
+      }
+    });
     setPendingFiles([]);
+
     if (onTyping) {
       onTyping(false);
     }
@@ -140,9 +201,19 @@ export function MessageInput({
         const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
         const file = new File([audioBlob], `voice-note-${Date.now()}.webm`, { type: "audio/webm" });
 
+        // Add to pending files with uploading state
+        const pendingFile: PendingFile = {
+          id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          file,
+          name: file.name,
+          size: file.size,
+          mimeType: "audio/webm",
+          status: "uploading",
+        };
+        setPendingFiles((prev) => [...prev, pendingFile]);
+
         // Upload the voice note
-        setIsUploading(true);
-        await startUpload([file]);
+        startUpload([file]);
 
         // Stop all tracks
         stream.getTracks().forEach((track) => track.stop());
@@ -198,6 +269,11 @@ export function MessageInput({
   };
 
   const isImage = (mimeType: string) => mimeType.startsWith("image/");
+  const isAudio = (mimeType: string) => mimeType.startsWith("audio/");
+
+  const getFileExtension = (name: string) => {
+    return name.split(".").pop()?.toUpperCase() || "FILE";
+  };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -227,39 +303,89 @@ export function MessageInput({
       if (onTyping) {
         onTyping(false);
       }
+      // Clean up object URLs
+      pendingFiles.forEach((f) => {
+        if (f.url?.startsWith("blob:")) {
+          URL.revokeObjectURL(f.url);
+        }
+      });
     };
-  }, [onTyping]);
+  }, [onTyping, pendingFiles]);
+
+  const stillUploading = pendingFiles.some((f) => f.status === "uploading");
+  const canSend = (message.trim() || pendingFiles.some((f) => f.status === "uploaded")) && !stillUploading;
 
   return (
     <form onSubmit={handleSubmit} className="border-t bg-card">
       {/* File previews */}
       {pendingFiles.length > 0 && (
         <div className="flex flex-wrap gap-2 px-4 pt-3">
-          {pendingFiles.map((file, index) => (
+          {pendingFiles.map((file) => (
             <div
-              key={index}
-              className="relative flex items-center gap-2 rounded-lg border bg-muted/50 p-2 pr-8"
+              key={file.id}
+              className={cn(
+                "relative flex items-center gap-2 rounded-lg border p-2 pr-8",
+                file.status === "uploading" && "bg-muted/30 border-dashed",
+                file.status === "uploaded" && "bg-muted/50",
+                file.status === "error" && "bg-red-50 border-red-200"
+              )}
             >
               {isImage(file.mimeType) ? (
-                <div className="h-10 w-10 rounded overflow-hidden bg-muted">
-                  <img
-                    src={file.url}
-                    alt={file.name}
-                    className="h-full w-full object-cover"
-                  />
+                <div className="relative h-12 w-12 rounded overflow-hidden bg-muted">
+                  {file.url && (
+                    <img
+                      src={file.url}
+                      alt={file.name}
+                      className={cn(
+                        "h-full w-full object-cover",
+                        file.status === "uploading" && "opacity-50"
+                      )}
+                    />
+                  )}
+                  {file.status === "uploading" && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                      <Loader2 className="h-4 w-4 animate-spin text-white" />
+                    </div>
+                  )}
+                </div>
+              ) : isAudio(file.mimeType) ? (
+                <div className={cn(
+                  "flex h-12 w-12 items-center justify-center rounded-full",
+                  file.status === "uploading" ? "bg-green-400" : "bg-green-500"
+                )}>
+                  {file.status === "uploading" ? (
+                    <Loader2 className="h-5 w-5 animate-spin text-white" />
+                  ) : (
+                    <Mic className="h-5 w-5 text-white" />
+                  )}
                 </div>
               ) : (
-                <div className="flex h-10 w-10 items-center justify-center rounded bg-muted">
-                  <FileText className="h-5 w-5 text-muted-foreground" />
+                <div className={cn(
+                  "flex h-12 w-12 items-center justify-center rounded-lg text-white text-xs font-bold",
+                  file.mimeType.includes("pdf") ? "bg-red-500" :
+                  file.mimeType.includes("word") || file.mimeType.includes("document") ? "bg-blue-500" :
+                  file.mimeType.includes("excel") || file.mimeType.includes("spreadsheet") ? "bg-green-600" :
+                  "bg-gray-500",
+                  file.status === "uploading" && "opacity-70"
+                )}>
+                  {file.status === "uploading" ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    getFileExtension(file.name)
+                  )}
                 </div>
               )}
-              <div className="min-w-0">
-                <p className="text-xs font-medium truncate max-w-[120px]">{file.name}</p>
-                <p className="text-xs text-muted-foreground">{formatFileSize(file.size)}</p>
+              <div className="min-w-0 max-w-32">
+                <p className="text-xs font-medium truncate">{file.name}</p>
+                <p className="text-xs text-muted-foreground">
+                  {file.status === "uploading" ? "Uploading..." :
+                   file.status === "error" ? "Failed" :
+                   formatFileSize(file.size)}
+                </p>
               </div>
               <button
                 type="button"
-                onClick={() => removeFile(index)}
+                onClick={() => removeFile(file.id)}
                 className="absolute right-1 top-1 rounded-full p-1 hover:bg-muted"
               >
                 <X className="h-3 w-3" />
@@ -269,133 +395,145 @@ export function MessageInput({
         </div>
       )}
 
-      {/* Upload progress */}
-      {isUploading && (
-        <div className="flex items-center gap-2 px-4 pt-3">
-          <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-          <span className="text-sm text-muted-foreground">Uploading...</span>
-        </div>
-      )}
-
       {/* Recording indicator */}
       {isRecording && (
-        <div className="flex items-center gap-3 px-4 pt-3">
-          <div className="flex items-center gap-2">
-            <div className="h-3 w-3 rounded-full bg-red-500 animate-pulse" />
-            <span className="text-sm text-muted-foreground">Recording {formatRecordingTime(recordingTime)}</span>
-          </div>
+        <div className="flex items-center justify-between gap-3 px-4 pt-3">
           <button
             type="button"
             onClick={cancelRecording}
-            className="text-sm text-red-500 hover:text-red-600"
+            className="p-2 rounded-full hover:bg-muted"
           >
-            Cancel
+            <Trash2 className="h-5 w-5 text-red-500" />
           </button>
+          <div className="flex-1 flex items-center gap-3">
+            <div className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
+            <span className="text-sm font-medium">{formatRecordingTime(recordingTime)}</span>
+            <div className="flex-1 flex items-center gap-0.5">
+              {/* Waveform visualization */}
+              {[...Array(30)].map((_, i) => (
+                <div
+                  key={i}
+                  className="w-1 bg-gray-400 rounded-full animate-pulse"
+                  style={{
+                    height: `${Math.random() * 16 + 4}px`,
+                    animationDelay: `${i * 50}ms`,
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+          <Button
+            type="button"
+            size="icon"
+            onClick={stopRecording}
+            className="shrink-0 h-10 w-10 rounded-full bg-green-500 hover:bg-green-600 text-white"
+          >
+            <Send className="h-5 w-5" />
+          </Button>
         </div>
       )}
 
-      <div className="flex items-end gap-2 p-4">
-        {/* Hidden file input */}
-        <input
-          ref={fileInputRef}
-          type="file"
-          multiple
-          accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx,.txt"
-          onChange={handleFileSelect}
-          className="hidden"
-        />
-
-        {/* Attachment button - left side */}
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className="shrink-0 h-10 w-10"
-          onClick={() => fileInputRef.current?.click()}
-          disabled={isUploading || disabled || isRecording}
-        >
-          <Paperclip className="h-5 w-5 text-muted-foreground" />
-        </Button>
-
-        {/* Input area with inline icons */}
-        <div className="relative flex-1">
-          <textarea
-            ref={textareaRef}
-            value={message}
-            onChange={(e) => {
-              setMessage(e.target.value);
-              handleTyping();
-            }}
-            onKeyDown={handleKeyDown}
-            placeholder="Type a message..."
-            disabled={disabled || isSending || isRecording}
-            rows={1}
-            className={cn(
-              "w-full resize-none rounded-full border bg-muted/50 px-4 py-3 pr-28 text-sm",
-              "placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring",
-              "disabled:cursor-not-allowed disabled:opacity-50"
-            )}
+      {/* Main input area */}
+      {!isRecording && (
+        <div className="flex items-end gap-2 p-3">
+          {/* Hidden file input */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx,.txt"
+            onChange={handleFileSelect}
+            className="hidden"
           />
 
-          {/* Icons inside input - right side */}
-          <div className="absolute bottom-1.5 right-2 flex items-center gap-0.5">
-            {/* Emoji picker */}
-            <div className="relative" ref={emojiPickerRef}>
+          {/* Input area with inline icons */}
+          <div className="relative flex-1">
+            <textarea
+              ref={textareaRef}
+              value={message}
+              onChange={(e) => {
+                setMessage(e.target.value);
+                handleTyping();
+              }}
+              onKeyDown={handleKeyDown}
+              placeholder="Type a message..."
+              disabled={disabled || isSending}
+              rows={1}
+              className={cn(
+                "w-full resize-none rounded-full border bg-muted/50 pl-4 pr-28 py-3 text-sm",
+                "placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring",
+                "disabled:cursor-not-allowed disabled:opacity-50"
+              )}
+            />
+
+            {/* Icons inside input - right side */}
+            <div className="absolute bottom-1.5 right-2 flex items-center gap-0.5">
+              {/* Mic button */}
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
                 className="h-8 w-8"
-                onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                disabled={disabled || isRecording}
+                onClick={startRecording}
+                disabled={disabled || stillUploading}
               >
-                <Smile className="h-5 w-5 text-muted-foreground" />
-              </Button>
-              {showEmojiPicker && (
-                <div className="absolute bottom-full right-0 mb-2 z-50">
-                  <Picker
-                    data={data}
-                    onEmojiSelect={handleEmojiSelect}
-                    theme="light"
-                    previewPosition="none"
-                    skinTonePosition="none"
-                  />
-                </div>
-              )}
-            </div>
-
-            {/* Voice note button */}
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className={cn("h-8 w-8", isRecording && "text-red-500")}
-              onClick={isRecording ? stopRecording : startRecording}
-              disabled={disabled || isUploading}
-            >
-              {isRecording ? (
-                <Square className="h-4 w-4 fill-current" />
-              ) : (
                 <Mic className="h-5 w-5 text-muted-foreground" />
-              )}
-            </Button>
-          </div>
-        </div>
+              </Button>
 
-        {/* Send button */}
-        <Button
-          type="submit"
-          size="icon"
-          disabled={(!message.trim() && pendingFiles.length === 0) || isSending || disabled || isUploading || isRecording}
-          className="shrink-0 h-10 w-10 rounded-full bg-green-500 hover:bg-green-600 text-white"
-        >
-          {isSending || isUploading ? (
-            <Loader2 className="h-5 w-5 animate-spin" />
-          ) : (
-            <Send className="h-5 w-5" />
-          )}
-        </Button>
-      </div>
+              {/* Emoji picker */}
+              <div className="relative" ref={emojiPickerRef}>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                  disabled={disabled}
+                >
+                  <Smile className="h-5 w-5 text-muted-foreground" />
+                </Button>
+                {showEmojiPicker && (
+                  <div className="absolute bottom-full right-0 mb-2 z-50">
+                    <Picker
+                      data={data}
+                      onEmojiSelect={handleEmojiSelect}
+                      theme="light"
+                      previewPosition="none"
+                      skinTonePosition="none"
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Attachment button */}
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={stillUploading || disabled}
+              >
+                <Paperclip className="h-5 w-5 text-muted-foreground" />
+              </Button>
+            </div>
+          </div>
+
+          {/* Send button */}
+          <Button
+            type="submit"
+            size="icon"
+            disabled={!canSend || isSending || disabled}
+            className="shrink-0 h-10 w-10 rounded-full bg-green-500 hover:bg-green-600 text-white"
+          >
+            {isSending ? (
+              <Loader2 className="h-5 w-5 animate-spin" />
+            ) : (
+              <Send className="h-5 w-5" />
+            )}
+          </Button>
+        </div>
+      )}
     </form>
   );
 }

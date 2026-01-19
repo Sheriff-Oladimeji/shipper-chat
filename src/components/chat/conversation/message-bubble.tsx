@@ -1,15 +1,15 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { Check, CheckCheck, Sparkles, Download, Play } from "lucide-react";
+import { Check, CheckCheck, Sparkles, Download, Play, Pause, Volume2 } from "lucide-react";
 import type { Attachment } from "@/types";
 import {
   ContextMenu,
   ContextMenuContent,
-  ContextMenuItem,
 } from "@/components/ui/context-menu";
+import { Avatar } from "@/components/ui/avatar";
 
 interface Reaction {
   emoji: string;
@@ -43,6 +43,12 @@ function formatFileSize(bytes: number): string {
 
 function getFileExtension(name: string): string {
   return name.split(".").pop()?.toUpperCase() || "FILE";
+}
+
+function formatDuration(seconds: number): string {
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60);
+  return `${mins}:${secs.toString().padStart(2, "0")}`;
 }
 
 // URL regex to detect links in messages
@@ -89,7 +95,138 @@ function parseMessageContent(content: string, isOwn: boolean): React.ReactNode {
   return result;
 }
 
-function AttachmentPreview({ attachment, isOwn }: { attachment: Attachment; isOwn: boolean }) {
+// Voice note player component
+function VoiceNotePlayer({
+  attachment,
+  isOwn,
+  senderImage
+}: {
+  attachment: Attachment;
+  isOwn: boolean;
+  senderImage?: string | null;
+}) {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const audioRef = useRef<HTMLAudioElement>(null);
+
+  const togglePlay = () => {
+    if (audioRef.current) {
+      if (isPlaying) {
+        audioRef.current.pause();
+      } else {
+        audioRef.current.play();
+      }
+      setIsPlaying(!isPlaying);
+    }
+  };
+
+  const handleTimeUpdate = () => {
+    if (audioRef.current) {
+      setCurrentTime(audioRef.current.currentTime);
+    }
+  };
+
+  const handleLoadedMetadata = () => {
+    if (audioRef.current) {
+      setDuration(audioRef.current.duration);
+    }
+  };
+
+  const handleEnded = () => {
+    setIsPlaying(false);
+    setCurrentTime(0);
+  };
+
+  const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
+
+  return (
+    <div className="flex items-center gap-2 min-w-[200px]">
+      <audio
+        ref={audioRef}
+        src={attachment.url}
+        onTimeUpdate={handleTimeUpdate}
+        onLoadedMetadata={handleLoadedMetadata}
+        onEnded={handleEnded}
+      />
+
+      {/* Avatar */}
+      <div className="relative shrink-0">
+        <Avatar
+          src={senderImage}
+          fallback="U"
+          size="md"
+        />
+        {/* Mic icon overlay */}
+        <div className={cn(
+          "absolute -bottom-1 -right-1 rounded-full p-0.5",
+          isOwn ? "bg-green-600" : "bg-gray-500"
+        )}>
+          <Volume2 className="h-2.5 w-2.5 text-white" />
+        </div>
+      </div>
+
+      {/* Play button */}
+      <button
+        onClick={togglePlay}
+        className={cn(
+          "flex h-8 w-8 shrink-0 items-center justify-center rounded-full",
+          isOwn ? "bg-white/20 hover:bg-white/30" : "bg-green-500 hover:bg-green-600"
+        )}
+      >
+        {isPlaying ? (
+          <Pause className={cn("h-4 w-4", isOwn ? "text-white" : "text-white")} />
+        ) : (
+          <Play className={cn("h-4 w-4 ml-0.5", isOwn ? "text-white" : "text-white")} />
+        )}
+      </button>
+
+      {/* Waveform / Progress */}
+      <div className="flex-1 flex flex-col gap-1">
+        <div className="relative h-6 flex items-center">
+          {/* Waveform bars */}
+          <div className="flex items-center gap-0.5 w-full">
+            {[...Array(25)].map((_, i) => {
+              const barProgress = (i / 25) * 100;
+              const isActive = barProgress <= progress;
+              return (
+                <div
+                  key={i}
+                  className={cn(
+                    "w-1 rounded-full transition-colors",
+                    isActive
+                      ? isOwn ? "bg-white" : "bg-green-500"
+                      : isOwn ? "bg-white/40" : "bg-gray-300"
+                  )}
+                  style={{
+                    height: `${Math.sin(i * 0.5) * 8 + 10}px`,
+                  }}
+                />
+              );
+            })}
+          </div>
+        </div>
+        {/* Duration */}
+        <span className={cn(
+          "text-xs",
+          isOwn ? "text-white/70" : "text-muted-foreground"
+        )}>
+          {formatDuration(isPlaying ? currentTime : duration || 0)}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function AttachmentPreview({
+  attachment,
+  isOwn,
+  senderImage
+}: {
+  attachment: Attachment;
+  isOwn: boolean;
+  senderImage?: string | null;
+}) {
   const isImage = attachment.type === "image";
   const isVideo = attachment.type === "video";
   const isAudio = attachment.type === "audio";
@@ -118,45 +255,45 @@ function AttachmentPreview({ attachment, isOwn }: { attachment: Attachment; isOw
 
   if (isAudio) {
     return (
-      <div className="flex items-center gap-3 p-2 rounded-lg bg-black/10">
-        <div className={cn(
-          "flex h-10 w-10 items-center justify-center rounded-full",
-          isOwn ? "bg-white/20" : "bg-primary/10"
-        )}>
-          <Play className="h-5 w-5" />
-        </div>
-        <audio src={attachment.url} controls className="flex-1 h-8" />
-      </div>
+      <VoiceNotePlayer
+        attachment={attachment}
+        isOwn={isOwn}
+        senderImage={senderImage}
+      />
     );
   }
 
-  // Document or other file type
+  // Document or other file type - WhatsApp style
   return (
     <a
       href={attachment.url}
       target="_blank"
       rel="noopener noreferrer"
       className={cn(
-        "flex items-center gap-3 p-3 rounded-lg transition-colors",
+        "flex items-center gap-3 p-2 rounded-lg transition-colors min-w-[200px]",
         isOwn ? "bg-white/10 hover:bg-white/20" : "bg-black/5 hover:bg-black/10"
       )}
     >
       <div className={cn(
-        "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-white text-xs font-bold",
+        "flex h-10 w-10 shrink-0 items-center justify-center rounded text-white text-xs font-bold",
         attachment.mimeType.includes("pdf") ? "bg-red-500" :
         attachment.mimeType.includes("word") || attachment.mimeType.includes("document") ? "bg-blue-500" :
         attachment.mimeType.includes("excel") || attachment.mimeType.includes("spreadsheet") ? "bg-green-600" :
+        attachment.mimeType.includes("video") ? "bg-purple-500" :
         "bg-gray-500"
       )}>
         {getFileExtension(attachment.name)}
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium truncate">{attachment.name}</p>
+        <p className={cn(
+          "text-sm font-medium truncate",
+          isOwn ? "text-white" : "text-foreground"
+        )}>{attachment.name}</p>
         <p className={cn(
           "text-xs",
           isOwn ? "text-white/60" : "text-muted-foreground"
         )}>
-          {formatFileSize(attachment.size)}
+          {formatFileSize(attachment.size)} • {getFileExtension(attachment.name).toLowerCase()}
         </p>
       </div>
       <Download className={cn(
@@ -176,11 +313,11 @@ export function MessageBubble({
   isDelivered = false,
   isAiGenerated = false,
   senderName,
+  senderImage,
   attachments = [],
   reactions = [],
   onReact,
 }: MessageBubbleProps) {
-  const [showReactionPicker, setShowReactionPicker] = useState(false);
   const time = format(new Date(timestamp), "h:mm a");
   const hasAttachments = attachments && attachments.length > 0;
   const hasContent = content && content.trim().length > 0;
@@ -199,7 +336,6 @@ export function MessageBubble({
     if (onReact && id) {
       onReact(id, emoji);
     }
-    setShowReactionPicker(false);
   };
 
   const contextMenuContent = (
@@ -221,25 +357,28 @@ export function MessageBubble({
   return (
     <div
       className={cn(
-        "flex w-full mb-4",
+        "flex w-full mb-2",
         isOwn ? "justify-end" : "justify-start"
       )}
     >
-      <div className="relative">
+      <div className={cn(
+        "relative max-w-[75%]",
+        hasReactions && "mb-3" // Extra space for reactions
+      )}>
         <ContextMenu menu={contextMenuContent}>
           <div
             className={cn(
-              "max-w-[70%] rounded-2xl",
-              hasAttachments && !hasContent ? "p-1" : "px-4 py-2",
+              "rounded-2xl",
+              hasAttachments && !hasContent ? "p-1.5" : "px-3 py-2",
               isOwn
-                ? "bg-green-500 text-white rounded-br-md"
-                : "bg-muted text-foreground rounded-bl-md",
+                ? "bg-green-500 text-white rounded-br-sm"
+                : "bg-muted text-foreground rounded-bl-sm",
               isAiGenerated && "border-2 border-purple-400"
             )}
             onDoubleClick={() => handleReact("❤️")}
           >
             {isAiGenerated && (
-              <div className="flex items-center gap-1 text-xs opacity-80 mb-1 px-3 pt-1">
+              <div className="flex items-center gap-1 text-xs opacity-80 mb-1 px-2 pt-1">
                 <Sparkles className="h-3 w-3" />
                 <span>AI Generated</span>
               </div>
@@ -256,6 +395,7 @@ export function MessageBubble({
                     key={attachment.id}
                     attachment={attachment}
                     isOwn={isOwn}
+                    senderImage={senderImage}
                   />
                 ))}
               </div>
@@ -265,7 +405,7 @@ export function MessageBubble({
             {hasContent && (
               <p className={cn(
                 "text-sm whitespace-pre-wrap break-words",
-                hasAttachments && "px-3"
+                hasAttachments && "px-2"
               )}>{parseMessageContent(content, isOwn)}</p>
             )}
 
@@ -274,18 +414,18 @@ export function MessageBubble({
               className={cn(
                 "flex items-center justify-end gap-1 mt-1",
                 isOwn ? "text-white/70" : "text-muted-foreground",
-                hasAttachments && !hasContent && "px-3 pb-1"
+                hasAttachments && !hasContent && "px-2 pb-1"
               )}
             >
-              <span className="text-xs">{time}</span>
+              <span className="text-[10px]">{time}</span>
               {isOwn && (
-                <span className="ml-1">
+                <span className="ml-0.5">
                   {isRead ? (
-                    <CheckCheck className="h-4 w-4 text-blue-300" />
+                    <CheckCheck className="h-3.5 w-3.5 text-blue-300" />
                   ) : isDelivered ? (
-                    <CheckCheck className="h-4 w-4" />
+                    <CheckCheck className="h-3.5 w-3.5" />
                   ) : (
-                    <Check className="h-4 w-4" />
+                    <Check className="h-3.5 w-3.5" />
                   )}
                 </span>
               )}
@@ -293,12 +433,12 @@ export function MessageBubble({
           </div>
         </ContextMenu>
 
-        {/* Reactions display */}
+        {/* Reactions display - positioned below and slightly overlapping */}
         {hasReactions && (
           <div
             className={cn(
-              "flex flex-wrap gap-1 mt-1",
-              isOwn ? "justify-end" : "justify-start"
+              "absolute -bottom-4 flex flex-wrap gap-0.5",
+              isOwn ? "right-2" : "left-2"
             )}
           >
             {Object.entries(groupedReactions).map(([emoji, reactionList]) => (
@@ -306,15 +446,15 @@ export function MessageBubble({
                 key={emoji}
                 onClick={() => handleReact(emoji)}
                 className={cn(
-                  "flex items-center gap-1 px-2 py-0.5 rounded-full text-xs",
-                  "bg-muted hover:bg-muted/80 transition-colors",
-                  "border border-border"
+                  "flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-xs",
+                  "bg-background shadow-sm border",
+                  "hover:bg-muted transition-colors"
                 )}
                 title={reactionList.map((r) => r.userName || "Someone").join(", ")}
               >
-                <span>{emoji}</span>
+                <span className="text-sm">{emoji}</span>
                 {reactionList.length > 1 && (
-                  <span className="text-muted-foreground">{reactionList.length}</span>
+                  <span className="text-xs text-muted-foreground">{reactionList.length}</span>
                 )}
               </button>
             ))}
