@@ -58,54 +58,48 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen">
-      {/* Left side - Branding */}
-      <div className="hidden lg:flex lg:w-1/2 bg-linear-to-br from-primary to-primary/80 items-center justify-center p-12">
-        <div className="text-white max-w-md">
-          <div className="flex items-center gap-3 mb-8">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/20 overflow-hidden">
-              <Image
-                src="/logo.svg"
-                alt="Shippr"
-                width={32}
-                height={32}
-                className="brightness-0 invert"
-              />
-            </div>
-            <span className="text-3xl font-bold">Shippr Chat</span>
+      {/* Left side - Branding with Illustration */}
+      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-primary via-primary to-primary/90 flex-col items-center justify-center p-12 relative overflow-hidden">
+        {/* Background pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-20 left-10 w-32 h-32 rounded-full bg-white/20 blur-3xl" />
+          <div className="absolute bottom-32 right-10 w-48 h-48 rounded-full bg-white/10 blur-3xl" />
+          <div className="absolute top-1/2 left-1/4 w-24 h-24 rounded-full bg-white/15 blur-2xl" />
+        </div>
+
+        <div className="relative z-10 text-white max-w-lg text-center">
+          {/* Brand */}
+          <div className="flex items-center justify-center gap-3 mb-8">
+            <Image
+              src="/logo.svg"
+              alt="Shipper Chat"
+              width={44}
+              height={44}
+              className="rounded-xl"
+            />
+            <span className="text-2xl font-bold">Shipper Chat</span>
           </div>
-          <h1 className="text-4xl font-bold mb-4">
+
+          {/* Illustration */}
+          <div className="mb-6">
+            <Image
+              src="/undraw_ai-chat_ljb9.svg"
+              alt="AI Chat illustration"
+              width={300}
+              height={225}
+              className="mx-auto"
+              priority
+            />
+          </div>
+
+          {/* Text content */}
+          <h1 className="text-3xl font-bold mb-3">
             Connect with your team in real-time
           </h1>
           <p className="text-lg text-white/80">
             Fast, secure, and AI-powered messaging for modern teams.
             Start conversations, share ideas, and get things done together.
           </p>
-          <div className="mt-8 space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20">
-                <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <span>Real-time messaging with read receipts</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20">
-                <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <span>AI-powered message assistance</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20">
-                <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <span>Online status and typing indicators</span>
-            </div>
-          </div>
         </div>
       </div>
 
@@ -114,16 +108,13 @@ export default function LoginPage() {
         <div className="w-full max-w-md space-y-8">
           <div className="text-center lg:hidden">
             <div className="flex items-center justify-center gap-3 mb-4">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary overflow-hidden">
-                <Image
-                  src="/logo.svg"
-                  alt="Shippr"
-                  width={28}
-                  height={28}
-                  className="brightness-0 invert"
-                />
-              </div>
-              <span className="text-2xl font-bold">Shippr Chat</span>
+              <Image
+                src="/logo.svg"
+                alt="Shippr"
+                width={40}
+                height={40}
+              />
+              <span className="text-2xl font-bold">Shipper Chat</span>
             </div>
           </div>
 
