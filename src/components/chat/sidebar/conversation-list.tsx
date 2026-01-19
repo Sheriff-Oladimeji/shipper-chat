@@ -4,8 +4,19 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { ConversationItem } from "./conversation-item";
 import type { ConversationWithDetails } from "@/types";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { useChatStore } from "@/stores/chat-store";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Loader2 } from "lucide-react";
 
 interface ConversationListProps {
   conversations: ConversationWithDetails[];
@@ -59,6 +70,11 @@ export function ConversationList({
   const queryClient = useQueryClient();
   const { onlineUsers, chatFilter } = useChatStore();
 
+  // Dialog state
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [clearChatDialogOpen, setClearChatDialogOpen] = useState(false);
+  const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
+
   const settingsMutation = useMutation({
     mutationFn: ({
       id,
@@ -81,6 +97,8 @@ export function ConversationList({
     mutationFn: deleteConversation,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["conversations"] });
+      setDeleteDialogOpen(false);
+      setSelectedConversationId(null);
     },
   });
 
@@ -123,22 +141,34 @@ export function ConversationList({
 
   const handleClearChat = useCallback(
     (id: string) => {
-      if (confirm("Are you sure you want to clear this chat? All messages will be deleted.")) {
-        // TODO: Implement clear chat API
-       
-      }
+      setSelectedConversationId(id);
+      setClearChatDialogOpen(true);
     },
     []
   );
 
+  const handleConfirmClearChat = useCallback(() => {
+    if (selectedConversationId) {
+      // TODO: Implement clear chat API
+    }
+    setClearChatDialogOpen(false);
+    setSelectedConversationId(null);
+  }, [selectedConversationId]);
+
   const handleDelete = useCallback(
     (id: string) => {
-      if (confirm("Are you sure you want to delete this conversation?")) {
-        deleteMutation.mutate(id);
-      }
+      setSelectedConversationId(id);
+      setDeleteDialogOpen(true);
     },
-    [deleteMutation]
+    []
   );
+
+  const handleConfirmDelete = useCallback(() => {
+    if (selectedConversationId) {
+      deleteMutation.mutate(selectedConversationId);
+    }
+    // Dialog closes in onSuccess
+  }, [selectedConversationId, deleteMutation]);
 
   const filteredConversations = conversations.filter((conv) => {
     const otherUser = conv.user1Id === currentUserId ? conv.user2 : conv.user1;
@@ -191,44 +221,98 @@ export function ConversationList({
   }
 
   return (
-    <ScrollArea className="flex-1">
-      <div className="divide-y">
-        {filteredConversations.map((conversation) => {
-          const otherUser =
-            conversation.user1Id === currentUserId
-              ? conversation.user2
-              : conversation.user1;
-          const lastMessage = conversation.lastMessage;
-          const isSentByMe = lastMessage?.senderId === currentUserId;
+    <>
+      <ScrollArea className="flex-1">
+        <div className="divide-y">
+          {filteredConversations.map((conversation) => {
+            const otherUser =
+              conversation.user1Id === currentUserId
+                ? conversation.user2
+                : conversation.user1;
+            const lastMessage = conversation.lastMessage;
+            const isSentByMe = lastMessage?.senderId === currentUserId;
 
-          return (
-            <ConversationItem
-              key={conversation.id}
-              id={conversation.id}
-              name={otherUser.name}
-              image={otherUser.image}
-              lastMessage={lastMessage?.content}
-              lastMessageAttachments={lastMessage?.attachments}
-              lastMessageTime={lastMessage?.createdAt}
-              unreadCount={conversation.unreadCount}
-              isOnline={onlineUsers.has(otherUser.id)}
-              isActive={conversation.id === activeConversationId}
-              isRead={lastMessage?.isRead}
-              isSentByMe={isSentByMe}
-              isArchived={conversation.settings?.isArchived}
-              isMarkedUnread={conversation.settings?.isMarkedUnread}
-              isMuted={conversation.settings?.isMuted}
-              onClick={() => onSelectConversation(conversation.id)}
-              onArchive={handleArchive}
-              onMarkUnread={handleMarkUnread}
-              onMute={handleMute}
-              onDelete={handleDelete}
-              onClearChat={handleClearChat}
-              onContactInfo={onContactInfo}
-            />
-          );
-        })}
-      </div>
-    </ScrollArea>
+            return (
+              <ConversationItem
+                key={conversation.id}
+                id={conversation.id}
+                name={otherUser.name}
+                image={otherUser.image}
+                lastMessage={lastMessage?.content}
+                lastMessageAttachments={lastMessage?.attachments}
+                lastMessageTime={lastMessage?.createdAt}
+                unreadCount={conversation.unreadCount}
+                isOnline={onlineUsers.has(otherUser.id)}
+                isActive={conversation.id === activeConversationId}
+                isRead={lastMessage?.isRead}
+                isSentByMe={isSentByMe}
+                isArchived={conversation.settings?.isArchived}
+                isMarkedUnread={conversation.settings?.isMarkedUnread}
+                isMuted={conversation.settings?.isMuted}
+                onClick={() => onSelectConversation(conversation.id)}
+                onArchive={handleArchive}
+                onMarkUnread={handleMarkUnread}
+                onMute={handleMute}
+                onDelete={handleDelete}
+                onClearChat={handleClearChat}
+                onContactInfo={onContactInfo}
+              />
+            );
+          })}
+        </div>
+      </ScrollArea>
+
+      {/* Delete Conversation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={(open) => {
+        if (!deleteMutation.isPending) setDeleteDialogOpen(open);
+      }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete conversation?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete this conversation and all its messages. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteMutation.isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              disabled={deleteMutation.isPending}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {deleteMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                "Delete"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Clear Chat Dialog */}
+      <AlertDialog open={clearChatDialogOpen} onOpenChange={setClearChatDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Clear chat?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will delete all messages in this conversation. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmClearChat}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Clear
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
