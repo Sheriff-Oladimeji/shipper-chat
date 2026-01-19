@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
-import prisma from "@/lib/prisma";
+import prisma from "@/lib/db";
 
 // Consider a user online if they were active in the last 5 minutes
 const ONLINE_THRESHOLD_MS = 5 * 60 * 1000;

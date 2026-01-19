@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { getPusherClient, getConversationChannel, getUserChannel, PUSHER_EVENTS, PRESENCE_CHANNEL } from "@/lib/pusher";
+import { getPusherClient, getConversationChannel, getUserChannel, PUSHER_EVENTS, PRESENCE_CHANNEL } from "@/lib/realtime";
 import { useChatStore } from "@/stores/chat-store";
 import type { Message } from "@/types";
 import type PusherClient from "pusher-js";

@@ -5,9 +5,7 @@ import { MessageCircle, Search, Bell, ChevronDown, LogOut, User } from "lucide-r
 import { Avatar } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/use-auth";
 import { useRouter } from "next/navigation";
-import { ProfileSettingsModal } from "./profile-settings-modal";
-import { SearchModal } from "./search-modal";
-import { NotificationSettingsModal } from "./notification-settings-modal";
+import { ProfileSettingsModal, SearchModal, NotificationSettingsModal } from "@/components/modals";
 
 export function TopNavbar() {
   const { user, logout } = useAuth();

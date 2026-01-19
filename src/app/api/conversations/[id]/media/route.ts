@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
-import prisma from "@/lib/prisma";
+import prisma from "@/lib/db";
 
 // URL regex pattern to extract links from message content
 // Matches: http://, https://, www., or domain.tld patterns
