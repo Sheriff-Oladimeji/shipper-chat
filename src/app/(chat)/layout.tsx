@@ -53,7 +53,7 @@ function ChatLayoutInner({ children }: { children: React.ReactNode }) {
             <Sidebar currentUserId={user.id} />
           </div>
           {/* Main content area */}
-          <main className="flex-1 flex flex-col min-w-0">{children}</main>
+          <main className="flex-1 flex flex-col min-w-0 bg-[#F3F3EE]">{children}</main>
         </div>
       </div>
     </div>

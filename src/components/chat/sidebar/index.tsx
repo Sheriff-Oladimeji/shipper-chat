@@ -9,9 +9,10 @@ import { NewMessageDropdown } from "./new-message-dropdown";
 import { ContactInfoPanel } from "../contact-info-panel";
 import { useChatStore } from "@/stores/chat-store";
 import { useConversations } from "@/hooks/use-conversations";
-import { Sparkles, Archive, ChevronLeft } from "lucide-react";
+import { Archive, ChevronLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { User } from "@/types";
+import Image from "next/image";
 
 interface SidebarProps {
   currentUserId: string;
@@ -122,8 +123,14 @@ export function Sidebar({ currentUserId }: SidebarProps) {
                 isAIActive && "bg-muted"
               )}
             >
-              <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary/80 to-primary">
-                <Sparkles className="h-6 w-6 text-white" />
+              <div className="relative shrink-0">
+                <Image
+                  src="/logo.svg"
+                  alt="Shipper AI"
+                  width={48}
+                  height={48}
+                  className="rounded-full"
+                />
                 <span className="absolute bottom-0 right-0 block h-3.5 w-3.5 rounded-full border-2 border-white bg-primary" />
               </div>
               <div className="flex-1 min-w-0">
