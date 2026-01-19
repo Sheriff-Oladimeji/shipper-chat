@@ -100,14 +100,25 @@ export function useConversationChannel(conversationId: string | null) {
     });
 
     channel.bind(PUSHER_EVENTS.MESSAGE_READ, (data: { messageId?: string; conversationId?: string; readBy: string }) => {
+      // Update React Query cache directly for instant UI update
+      queryClient.setQueryData<Message[]>(
+        ["messages", conversationId],
+        (oldMessages = []) => oldMessages.map((msg) => {
+          if (data.messageId) {
+            // Single message read
+            return msg.id === data.messageId ? { ...msg, isRead: true } : msg;
+          } else {
+            // All messages sent to readBy user are now read
+            return msg.receiverId === data.readBy ? { ...msg, isRead: true } : msg;
+          }
+        })
+      );
+      // Also update store for consistency
       if (data.messageId) {
-        // Single message read
         updateMessage(conversationId, data.messageId, { isRead: true });
       } else if (data.conversationId) {
-        // All messages in conversation marked as read by recipient
         markAllMessagesRead(conversationId, data.readBy);
       }
-      queryClient.invalidateQueries({ queryKey: ["messages", conversationId] });
     });
 
     return () => {
