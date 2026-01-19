@@ -11,8 +11,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { Avatar } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Search, Loader2, Sparkles } from "lucide-react";
+import { Search, Loader2 } from "lucide-react";
 import { useUsers } from "@/hooks/use-users";
+import Image from "next/image";
 
 interface User {
   id: string;
@@ -94,9 +95,15 @@ export function NewMessageDialog({
                     onClick={handleSelectShipperAI}
                     className="flex w-full items-center gap-3 rounded-lg p-3 text-left transition-colors hover:bg-muted"
                   >
-                    <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-green-400 to-green-600">
-                      <Sparkles className="h-5 w-5 text-white" />
-                      <span className="absolute bottom-0 right-0 block h-3 w-3 rounded-full border-2 border-white bg-green-500" />
+                    <div className="relative shrink-0">
+                      <Image
+                        src="/logo.svg"
+                        alt="Shipper AI"
+                        width={40}
+                        height={40}
+                        className="rounded-full"
+                      />
+                      <span className="absolute bottom-0 right-0 block h-3 w-3 rounded-full border-2 border-white bg-primary" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-medium truncate">{SHIPPER_AI.name}</p>

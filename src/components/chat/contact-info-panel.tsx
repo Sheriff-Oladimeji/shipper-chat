@@ -60,7 +60,7 @@ interface ConversationMediaResponse {
 function getFileIcon(mimeType: string) {
   if (mimeType.includes("pdf")) return "bg-red-500";
   if (mimeType.includes("word") || mimeType.includes("document")) return "bg-blue-500";
-  if (mimeType.includes("excel") || mimeType.includes("spreadsheet")) return "bg-green-500";
+  if (mimeType.includes("excel") || mimeType.includes("spreadsheet")) return "bg-primary";
   if (mimeType.includes("powerpoint") || mimeType.includes("presentation")) return "bg-orange-500";
   return "bg-gray-500";
 }
@@ -128,6 +128,7 @@ export function ContactInfoPanel({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         transparent
+        rounded
         className="w-[360px] sm:max-w-[360px] p-0 gap-0 [&>button]:hidden"
         side="right"
       >
@@ -180,35 +181,28 @@ export function ContactInfoPanel({
           onValueChange={setActiveTab}
           className="flex-1 flex flex-col overflow-hidden"
         >
-          <TabsList className="grid w-full grid-cols-3 rounded-none border-b bg-transparent h-auto p-0">
-            <TabsTrigger
-              value="media"
-              className={cn(
-                "rounded-none py-3 text-sm font-medium border-b-2 border-transparent data-[state=active]:border-green-500 data-[state=active]:bg-transparent data-[state=active]:text-green-500"
-              )}
-            >
-              <Image className="h-4 w-4 mr-1.5" />
-              Media
-            </TabsTrigger>
-            <TabsTrigger
-              value="link"
-              className={cn(
-                "rounded-none py-3 text-sm font-medium border-b-2 border-transparent data-[state=active]:border-green-500 data-[state=active]:bg-transparent data-[state=active]:text-green-500"
-              )}
-            >
-              <Link2 className="h-4 w-4 mr-1.5" />
-              Link
-            </TabsTrigger>
-            <TabsTrigger
-              value="docs"
-              className={cn(
-                "rounded-none py-3 text-sm font-medium border-b-2 border-transparent data-[state=active]:border-green-500 data-[state=active]:bg-transparent data-[state=active]:text-green-500"
-              )}
-            >
-              <FileText className="h-4 w-4 mr-1.5" />
-              Docs
-            </TabsTrigger>
-          </TabsList>
+          <div className="px-4 py-3 border-b">
+            <TabsList className="grid w-full grid-cols-3 bg-muted rounded-full h-10 p-1">
+              <TabsTrigger
+                value="media"
+                className="rounded-full text-sm font-medium data-[state=active]:bg-white data-[state=active]:text-foreground data-[state=active]:shadow-sm text-muted-foreground"
+              >
+                Media
+              </TabsTrigger>
+              <TabsTrigger
+                value="link"
+                className="rounded-full text-sm font-medium data-[state=active]:bg-white data-[state=active]:text-foreground data-[state=active]:shadow-sm text-muted-foreground"
+              >
+                Link
+              </TabsTrigger>
+              <TabsTrigger
+                value="docs"
+                className="rounded-full text-sm font-medium data-[state=active]:bg-white data-[state=active]:text-foreground data-[state=active]:shadow-sm text-muted-foreground"
+              >
+                Docs
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
           {/* Media Tab */}
           <TabsContent
@@ -287,7 +281,7 @@ export function ContactInfoPanel({
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">{extractDomain(link.url)}</p>
-                      <p className="text-xs text-green-500 truncate mt-0.5">
+                      <p className="text-xs text-primary truncate mt-0.5">
                         {link.url}
                       </p>
                     </div>

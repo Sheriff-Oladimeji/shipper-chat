@@ -53,10 +53,12 @@ function SheetContent({
   children,
   side = "right",
   transparent = false,
+  rounded = false,
   ...props
 }: React.ComponentProps<typeof SheetPrimitive.Content> & {
   side?: "top" | "right" | "bottom" | "left"
   transparent?: boolean
+  rounded?: boolean
 }) {
   return (
     <SheetPortal>
@@ -73,6 +75,8 @@ function SheetContent({
             "data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top inset-x-0 top-0 h-auto border-b",
           side === "bottom" &&
             "data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom inset-x-0 bottom-0 h-auto border-t",
+          rounded && side === "right" && "rounded-l-2xl",
+          rounded && side === "left" && "rounded-r-2xl",
           className
         )}
         {...props}

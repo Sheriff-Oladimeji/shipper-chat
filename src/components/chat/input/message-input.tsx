@@ -364,7 +364,7 @@ export function MessageInput({
               ) : isAudio(file.mimeType) ? (
                 <div className={cn(
                   "flex h-12 w-12 items-center justify-center rounded-full",
-                  file.status === "uploading" ? "bg-green-400" : "bg-green-500"
+                  file.status === "uploading" ? "bg-primary/80" : "bg-primary"
                 )}>
                   {file.status === "uploading" ? (
                     <Loader2 className="h-5 w-5 animate-spin text-white" />
@@ -377,7 +377,7 @@ export function MessageInput({
                   "flex h-12 w-12 items-center justify-center rounded-lg text-white text-xs font-bold",
                   file.mimeType.includes("pdf") ? "bg-red-500" :
                   file.mimeType.includes("word") || file.mimeType.includes("document") ? "bg-blue-500" :
-                  file.mimeType.includes("excel") || file.mimeType.includes("spreadsheet") ? "bg-green-600" :
+                  file.mimeType.includes("excel") || file.mimeType.includes("spreadsheet") ? "bg-primary" :
                   "bg-gray-500",
                   file.status === "uploading" && "opacity-70"
                 )}>
@@ -439,7 +439,7 @@ export function MessageInput({
             type="button"
             size="icon"
             onClick={stopRecording}
-            className="shrink-0 h-10 w-10 rounded-full bg-green-500 hover:bg-green-600 text-white"
+            className="shrink-0 h-10 w-10 rounded-full bg-primary hover:bg-primary/90 text-white"
           >
             <Send className="h-5 w-5" />
           </Button>
@@ -571,7 +571,7 @@ export function MessageInput({
             type="submit"
             size="icon"
             disabled={!canSend || disabled}
-            className="shrink-0 h-10 w-10 rounded-full bg-green-500 hover:bg-green-600 text-white"
+            className="shrink-0 h-10 w-10 rounded-full bg-primary hover:bg-primary/90 text-white"
           >
             <Send className="h-5 w-5" />
           </Button>

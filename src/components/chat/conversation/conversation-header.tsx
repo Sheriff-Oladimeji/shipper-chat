@@ -58,7 +58,7 @@ export function ConversationHeader({
             <h2 className="font-semibold text-foreground">{name}</h2>
             <p className="text-sm text-muted-foreground">
               {isOnline ? (
-                <span className="text-green-500">Online</span>
+                <span className="text-primary">Online</span>
               ) : lastSeenAt ? (
                 `last seen ${formatDistanceToNow(new Date(lastSeenAt), { addSuffix: true })}`
               ) : (

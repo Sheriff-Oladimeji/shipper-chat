@@ -71,7 +71,7 @@ export function Avatar({
           />
         ) : (
           <span className={cn(
-            "flex h-full w-full items-center justify-center bg-gradient-to-br from-green-400 to-green-600 font-medium text-white",
+            "flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/80 to-primary font-medium text-white",
             textSizeClasses[size]
           )}>
             {initials}
@@ -83,7 +83,7 @@ export function Avatar({
           className={cn(
             "absolute bottom-0 right-0 block rounded-full border-2 border-white",
             statusSizeClasses[size],
-            isOnline ? "bg-green-500" : "bg-gray-400"
+            isOnline ? "bg-primary" : "bg-gray-400"
           )}
         />
       )}

@@ -57,7 +57,7 @@ export function ConversationList({
   onContactInfo,
 }: ConversationListProps) {
   const queryClient = useQueryClient();
-  const { onlineUsers } = useChatStore();
+  const { onlineUsers, chatFilter } = useChatStore();
 
   const settingsMutation = useMutation({
     mutationFn: ({
@@ -146,25 +146,42 @@ export function ConversationList({
       .toLowerCase()
       .includes(searchQuery.toLowerCase());
     const isArchived = conv.settings?.isArchived || false;
+    const isMarkedUnread = conv.settings?.isMarkedUnread || false;
+    const hasUnreadMessages = (conv.unreadCount || 0) > 0;
+    const isUnread = isMarkedUnread || hasUnreadMessages;
 
-    // If showArchived is true, only show archived; otherwise exclude archived
+    // If showArchived is true (from nav sidebar), only show archived
     if (showArchived) {
       return matchesSearch && isArchived;
     }
-    return matchesSearch && !isArchived;
+
+    // Apply chat filter from dropdown
+    switch (chatFilter) {
+      case "archived":
+        return matchesSearch && isArchived;
+      case "unread":
+        return matchesSearch && isUnread && !isArchived;
+      case "read":
+        return matchesSearch && !isUnread && !isArchived;
+      case "all":
+      default:
+        return matchesSearch && !isArchived;
+    }
   });
 
   if (filteredConversations.length === 0) {
+    const getEmptyMessage = () => {
+      if (searchQuery) return "No conversations found";
+      if (showArchived || chatFilter === "archived") return "No archived conversations";
+      if (chatFilter === "unread") return "No unread conversations";
+      if (chatFilter === "read") return "No read conversations";
+      return "No conversations yet";
+    };
+
     return (
       <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
-        <p className="text-muted-foreground">
-          {searchQuery
-            ? "No conversations found"
-            : showArchived
-            ? "No archived conversations"
-            : "No conversations yet"}
-        </p>
-        {!searchQuery && !showArchived && (
+        <p className="text-muted-foreground">{getEmptyMessage()}</p>
+        {!searchQuery && !showArchived && chatFilter === "all" && (
           <p className="text-sm text-muted-foreground mt-1">
             Start a new message to begin chatting
           </p>

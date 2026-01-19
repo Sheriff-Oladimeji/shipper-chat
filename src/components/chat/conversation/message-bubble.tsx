@@ -161,7 +161,7 @@ function VoiceNotePlayer({
         {/* Mic icon overlay */}
         <div className={cn(
           "absolute -bottom-1 -right-1 rounded-full p-0.5",
-          isOwn ? "bg-green-600" : "bg-gray-500"
+          isOwn ? "bg-primary" : "bg-gray-500"
         )}>
           <Volume2 className="h-2.5 w-2.5 text-white" />
         </div>
@@ -172,7 +172,7 @@ function VoiceNotePlayer({
         onClick={togglePlay}
         className={cn(
           "flex h-8 w-8 shrink-0 items-center justify-center rounded-full",
-          isOwn ? "bg-white/20 hover:bg-white/30" : "bg-green-500 hover:bg-green-600"
+          isOwn ? "bg-white/20 hover:bg-white/30" : "bg-primary hover:bg-primary"
         )}
       >
         {isPlaying ? (
@@ -196,7 +196,7 @@ function VoiceNotePlayer({
                   className={cn(
                     "w-1 rounded-full transition-colors",
                     isActive
-                      ? isOwn ? "bg-white" : "bg-green-500"
+                      ? isOwn ? "bg-white" : "bg-primary"
                       : isOwn ? "bg-white/40" : "bg-gray-300"
                   )}
                   style={{
@@ -279,7 +279,7 @@ function AttachmentPreview({
         "flex h-10 w-10 shrink-0 items-center justify-center rounded text-white text-xs font-bold",
         attachment.mimeType.includes("pdf") ? "bg-red-500" :
         attachment.mimeType.includes("word") || attachment.mimeType.includes("document") ? "bg-blue-500" :
-        attachment.mimeType.includes("excel") || attachment.mimeType.includes("spreadsheet") ? "bg-green-600" :
+        attachment.mimeType.includes("excel") || attachment.mimeType.includes("spreadsheet") ? "bg-primary" :
         attachment.mimeType.includes("video") ? "bg-purple-500" :
         "bg-gray-500"
       )}>
@@ -373,7 +373,7 @@ export function MessageBubble({
               "rounded-2xl",
               hasAttachments && !hasContent ? "p-1.5" : "px-3 py-2",
               isOwn
-                ? "bg-green-500 text-white rounded-br-sm"
+                ? "bg-primary text-white rounded-br-sm"
                 : "bg-muted text-foreground rounded-bl-sm",
               isAiGenerated && "border-2 border-purple-400"
             )}

@@ -216,7 +216,7 @@ export function ConversationItem({
       <div className="relative overflow-hidden">
         {/* Left action - Unread (swipe right) */}
         <motion.div
-          className="absolute inset-y-0 left-0 flex items-center justify-center bg-green-500"
+          className="absolute inset-y-0 left-0 flex items-center justify-center bg-primary"
           style={{
             width: ACTION_WIDTH,
             opacity: leftActionOpacity,
@@ -242,7 +242,7 @@ export function ConversationItem({
 
         {/* Right action - Archive (swipe left) */}
         <motion.div
-          className="absolute inset-y-0 right-0 flex items-center justify-center bg-green-500"
+          className="absolute inset-y-0 right-0 flex items-center justify-center bg-primary"
           style={{
             width: ACTION_WIDTH,
             opacity: rightActionOpacity,
@@ -323,7 +323,7 @@ export function ConversationItem({
                 </span>
               </div>
               {(unreadCount > 0 || isMarkedUnread) && (
-                <span className="shrink-0 flex h-5 min-w-5 items-center justify-center rounded-full bg-green-500 px-1.5 text-xs font-medium text-white">
+                <span className="shrink-0 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-xs font-medium text-white">
                   {unreadCount > 0 ? (unreadCount > 99 ? "99+" : unreadCount) : ""}
                 </span>
               )}

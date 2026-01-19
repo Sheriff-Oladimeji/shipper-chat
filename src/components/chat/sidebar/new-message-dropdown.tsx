@@ -3,8 +3,9 @@
 import { useState, useEffect, useRef, RefObject } from "react";
 import { Input } from "@/components/ui/input";
 import { Avatar } from "@/components/ui/avatar";
-import { Search, Loader2, Sparkles } from "lucide-react";
+import { Search, Loader2 } from "lucide-react";
 import { useUsers } from "@/hooks/use-users";
+import Image from "next/image";
 
 interface NewMessageDropdownProps {
   open: boolean;
@@ -79,6 +80,11 @@ export function NewMessageDropdown({
             onChange={(e) => setSearch(e.target.value)}
             className="pl-8 h-8 text-sm"
             autoFocus
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="off"
+            spellCheck={false}
+            data-form-type="other"
           />
         </div>
       </div>
@@ -96,8 +102,14 @@ export function NewMessageDropdown({
                 onClick={onSelectShipperAI}
                 className="flex w-full items-center gap-2.5 px-2.5 py-2 text-left transition-colors hover:bg-muted"
               >
-                <div className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-green-400 to-green-600">
-                  <Sparkles className="h-4 w-4 text-white" />
+                <div className="relative shrink-0">
+                  <Image
+                    src="/logo.svg"
+                    alt="Shipper AI"
+                    width={32}
+                    height={32}
+                    className="rounded-full"
+                  />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">Shipper AI</p>

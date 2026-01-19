@@ -43,6 +43,14 @@ interface ChatState {
   // Search
   searchQuery: string;
   setSearchQuery: (query: string) => void;
+
+  // Archive view
+  showArchived: boolean;
+  setShowArchived: (show: boolean) => void;
+
+  // Filter
+  chatFilter: "all" | "archived" | "read" | "unread";
+  setChatFilter: (filter: "all" | "archived" | "read" | "unread") => void;
 }
 
 export const useChatStore = create<ChatState>((set, get) => ({
@@ -181,4 +189,12 @@ export const useChatStore = create<ChatState>((set, get) => ({
   // Search
   searchQuery: "",
   setSearchQuery: (query) => set({ searchQuery: query }),
+
+  // Archive view
+  showArchived: false,
+  setShowArchived: (show) => set({ showArchived: show }),
+
+  // Filter
+  chatFilter: "all",
+  setChatFilter: (filter) => set({ chatFilter: filter }),
 }));
