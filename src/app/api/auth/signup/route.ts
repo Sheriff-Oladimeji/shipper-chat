@@ -14,6 +14,31 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return NextResponse.json(
+        { success: false, error: "Invalid email format" },
+        { status: 400 }
+      );
+    }
+
+    // Validate password length
+    if (password.length < 6) {
+      return NextResponse.json(
+        { success: false, error: "Password must be at least 6 characters" },
+        { status: 400 }
+      );
+    }
+
+    // Validate name
+    if (name.trim().length < 2) {
+      return NextResponse.json(
+        { success: false, error: "Name must be at least 2 characters" },
+        { status: 400 }
+      );
+    }
+
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
       where: { email },
@@ -54,19 +79,21 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Set cookies
-    response.cookies.set("accessToken", accessToken, {
+    // Set cookies (must match ACCESS_TOKEN_COOKIE and REFRESH_TOKEN_COOKIE in auth lib)
+    response.cookies.set("access_token", accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       maxAge: 60 * 15, // 15 minutes
+      path: "/",
     });
 
-    response.cookies.set("refreshToken", refreshToken, {
+    response.cookies.set("refresh_token", refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       maxAge: 60 * 60 * 24 * 7, // 7 days
+      path: "/",
     });
 
     return response;
