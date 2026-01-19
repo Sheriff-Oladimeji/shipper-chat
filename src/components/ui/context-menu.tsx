@@ -195,3 +195,96 @@ export function ContextMenuItem({
 export function ContextMenuSeparator({ className }: ContextMenuSeparatorProps) {
   return <div className={cn("my-1 h-px bg-border", className)} />;
 }
+
+// Submenu components
+interface ContextMenuSubProps {
+  children: React.ReactNode;
+}
+
+interface ContextMenuSubTriggerProps {
+  children: React.ReactNode;
+  className?: string;
+}
+
+interface ContextMenuSubContentProps {
+  children: React.ReactNode;
+  className?: string;
+}
+
+const ContextMenuSubContext = React.createContext<{
+  open: boolean;
+  setOpen: (open: boolean) => void;
+}>({
+  open: false,
+  setOpen: () => {},
+});
+
+export function ContextMenuSub({ children }: ContextMenuSubProps) {
+  const [open, setOpen] = React.useState(false);
+
+  return (
+    <ContextMenuSubContext.Provider value={{ open, setOpen }}>
+      <div
+        className="relative"
+        onMouseEnter={() => setOpen(true)}
+        onMouseLeave={() => setOpen(false)}
+      >
+        {children}
+      </div>
+    </ContextMenuSubContext.Provider>
+  );
+}
+
+export function ContextMenuSubTrigger({
+  children,
+  className,
+}: ContextMenuSubTriggerProps) {
+  return (
+    <div
+      className={cn(
+        "flex w-full items-center justify-between gap-2 rounded-md px-3 py-2 text-sm transition-colors hover:bg-muted cursor-pointer",
+        className
+      )}
+    >
+      <div className="flex items-center gap-2">{children}</div>
+      <svg
+        className="h-4 w-4"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M9 5l7 7-7 7"
+        />
+      </svg>
+    </div>
+  );
+}
+
+export function ContextMenuSubContent({
+  children,
+  className,
+}: ContextMenuSubContentProps) {
+  const { open } = React.useContext(ContextMenuSubContext);
+  const { setOpen: setParentOpen } = React.useContext(ContextMenuContext);
+
+  if (!open) return null;
+
+  return (
+    <div
+      className={cn(
+        "absolute left-full top-0 ml-1 min-w-[140px] rounded-lg border bg-popover p-1 shadow-lg",
+        className
+      )}
+      onClick={(e) => {
+        e.stopPropagation();
+        setParentOpen(false);
+      }}
+    >
+      {children}
+    </div>
+  );
+}

@@ -10,12 +10,9 @@ import {
   Mail,
   MailOpen,
   BellOff,
-  Pin,
-  PinOff,
   Trash2,
   MessageCircle,
   Volume2,
-  ChevronRight,
   UserCircle,
   Upload,
   X,
@@ -26,6 +23,9 @@ import {
   ContextMenuContent,
   ContextMenuItem,
   ContextMenuSeparator,
+  ContextMenuSub,
+  ContextMenuSubTrigger,
+  ContextMenuSubContent,
 } from "@/components/ui/context-menu";
 import { motion, useMotionValue, useTransform, PanInfo } from "framer-motion";
 
@@ -43,13 +43,13 @@ interface ConversationItemProps {
   isArchived?: boolean;
   isMarkedUnread?: boolean;
   isMuted?: boolean;
-  isPinned?: boolean;
   onClick: () => void;
   onArchive?: (id: string) => void;
   onMarkUnread?: (id: string) => void;
-  onMute?: (id: string) => void;
-  onPin?: (id: string) => void;
+  onMute?: (id: string, duration?: string) => void;
   onDelete?: (id: string) => void;
+  onContactInfo?: (id: string) => void;
+  onClearChat?: (id: string) => void;
 }
 
 const SWIPE_THRESHOLD = 80;
@@ -69,13 +69,13 @@ export function ConversationItem({
   isArchived = false,
   isMarkedUnread = false,
   isMuted = false,
-  isPinned = false,
   onClick,
   onArchive,
   onMarkUnread,
   onMute,
-  onPin,
   onDelete,
+  onContactInfo,
+  onClearChat,
 }: ConversationItemProps) {
   const [isDragging, setIsDragging] = useState(false);
   const x = useMotionValue(0);
@@ -128,42 +128,40 @@ export function ConversationItem({
   const contextMenuContent = (
     <ContextMenuContent>
       <ContextMenuItem onClick={() => onMarkUnread?.(id)}>
-        {isMarkedUnread || unreadCount > 0 ? (
-          <>
-            <MessageCircle className="h-4 w-4" />
-            Mark as read
-          </>
-        ) : (
-          <>
-            <MessageCircle className="h-4 w-4" />
-            Mark as unread
-          </>
-        )}
+        <MessageCircle className="h-4 w-4" />
+        {isMarkedUnread || unreadCount > 0 ? "Mark as read" : "Mark as unread"}
       </ContextMenuItem>
       <ContextMenuItem onClick={() => onArchive?.(id)}>
         <Archive className="h-4 w-4" />
         {isArchived ? "Unarchive" : "Archive"}
       </ContextMenuItem>
-      <ContextMenuItem onClick={() => onMute?.(id)}>
-        <Volume2 className="h-4 w-4" />
-        {isMuted ? "Unmute" : "Mute"}
-        <ChevronRight className="h-4 w-4 ml-auto" />
-      </ContextMenuItem>
-      <ContextMenuItem onClick={() => onPin?.(id)}>
-        {isPinned ? (
-          <>
-            <PinOff className="h-4 w-4" />
-            Unpin
-          </>
-        ) : (
-          <>
-            <Pin className="h-4 w-4" />
-            Pin
-          </>
-        )}
-      </ContextMenuItem>
+      <ContextMenuSub>
+        <ContextMenuSubTrigger>
+          <Volume2 className="h-4 w-4" />
+          {isMuted ? "Unmute" : "Mute"}
+        </ContextMenuSubTrigger>
+        <ContextMenuSubContent>
+          {isMuted ? (
+            <ContextMenuItem onClick={() => onMute?.(id, "unmute")}>
+              Unmute notifications
+            </ContextMenuItem>
+          ) : (
+            <>
+              <ContextMenuItem onClick={() => onMute?.(id, "8hours")}>
+                8 hours
+              </ContextMenuItem>
+              <ContextMenuItem onClick={() => onMute?.(id, "1week")}>
+                1 week
+              </ContextMenuItem>
+              <ContextMenuItem onClick={() => onMute?.(id, "always")}>
+                Always
+              </ContextMenuItem>
+            </>
+          )}
+        </ContextMenuSubContent>
+      </ContextMenuSub>
       <ContextMenuSeparator />
-      <ContextMenuItem>
+      <ContextMenuItem onClick={() => onContactInfo?.(id)}>
         <UserCircle className="h-4 w-4" />
         Contact info
       </ContextMenuItem>
@@ -171,7 +169,7 @@ export function ConversationItem({
         <Upload className="h-4 w-4" />
         Export chat
       </ContextMenuItem>
-      <ContextMenuItem>
+      <ContextMenuItem onClick={() => onClearChat?.(id)}>
         <X className="h-4 w-4" />
         Clear chat
       </ContextMenuItem>
@@ -255,9 +253,6 @@ export function ConversationItem({
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1.5 min-w-0">
-                {isPinned && (
-                  <Pin className="h-3 w-3 text-muted-foreground shrink-0" />
-                )}
                 <span
                   className={cn(
                     "font-medium text-foreground truncate",
