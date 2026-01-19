@@ -22,7 +22,7 @@ import {
   ContextMenuItem,
   ContextMenuSeparator,
 } from "@/components/ui/context-menu";
-import { motion, useMotionValue, useTransform, useAnimation, PanInfo } from "framer-motion";
+import { motion, useMotionValue, useTransform, PanInfo } from "framer-motion";
 
 interface ConversationItemProps {
   id: string;
@@ -74,7 +74,6 @@ export function ConversationItem({
 }: ConversationItemProps) {
   const [isDragging, setIsDragging] = useState(false);
   const x = useMotionValue(0);
-  const controls = useAnimation();
 
   // Transform for left action (Archive) - appears when swiping right
   const leftActionOpacity = useTransform(x, [0, ACTION_WIDTH / 2, ACTION_WIDTH], [0, 0.5, 1]);
@@ -92,7 +91,7 @@ export function ConversationItem({
     setIsDragging(true);
   };
 
-  const handleDragEnd = async (_: unknown, info: PanInfo) => {
+  const handleDragEnd = (_: unknown, info: PanInfo) => {
     const offset = info.offset.x;
     const velocity = info.velocity.x;
 
@@ -101,19 +100,15 @@ export function ConversationItem({
     const shouldTriggerLeft = offset < -SWIPE_THRESHOLD || (offset < -40 && velocity < -500);
 
     if (shouldTriggerRight && onArchive) {
-      // Animate out to the right, then snap back
-      await controls.start({ x: ACTION_WIDTH + 20, transition: { duration: 0.1 } });
+      // Trigger action and snap back
       onArchive(id);
-      await controls.start({ x: 0, transition: { duration: 0.2 } });
     } else if (shouldTriggerLeft && onMarkUnread) {
-      // Animate out to the left, then snap back
-      await controls.start({ x: -ACTION_WIDTH - 20, transition: { duration: 0.1 } });
+      // Trigger action and snap back
       onMarkUnread(id);
-      await controls.start({ x: 0, transition: { duration: 0.2 } });
-    } else {
-      // Snap back to center
-      controls.start({ x: 0, transition: { type: "spring", stiffness: 500, damping: 30 } });
     }
+
+    // Always snap back to center using x.set for immediate response
+    x.set(0);
 
     // Small delay before re-enabling clicks
     setTimeout(() => setIsDragging(false), 50);
@@ -229,9 +224,9 @@ export function ConversationItem({
           drag="x"
           dragConstraints={{ left: -ACTION_WIDTH, right: ACTION_WIDTH }}
           dragElastic={0.1}
+          dragMomentum={false}
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
-          animate={controls}
           style={{ x }}
           onClick={handleClick}
           className={cn(
