@@ -69,12 +69,12 @@ export default function LoginPage() {
 
         <div className="relative z-10 text-white max-w-lg text-center">
           {/* Illustration */}
-          <div className="mb-8">
+          <div className="mb-6">
             <Image
-              src="/chat-illustration.svg"
-              alt="Chat illustration"
-              width={400}
-              height={320}
+              src="/undraw_ai-chat_ljb9.svg"
+              alt="AI Chat illustration"
+              width={320}
+              height={240}
               className="mx-auto"
               priority
             />
@@ -84,32 +84,10 @@ export default function LoginPage() {
           <h1 className="text-4xl font-bold mb-4">
             Connect with your team in real-time
           </h1>
-          <p className="text-lg text-white/80 mb-8">
+          <p className="text-lg text-white/80">
             Fast, secure, and AI-powered messaging for modern teams.
             Start conversations, share ideas, and get things done together.
           </p>
-
-          {/* Feature pills */}
-          <div className="flex flex-wrap justify-center gap-3">
-            <div className="flex items-center gap-2 bg-white/15 backdrop-blur-sm px-4 py-2 rounded-full">
-              <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-              </svg>
-              <span className="text-sm">Real-time messaging</span>
-            </div>
-            <div className="flex items-center gap-2 bg-white/15 backdrop-blur-sm px-4 py-2 rounded-full">
-              <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-              </svg>
-              <span className="text-sm">AI-powered</span>
-            </div>
-            <div className="flex items-center gap-2 bg-white/15 backdrop-blur-sm px-4 py-2 rounded-full">
-              <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-              </svg>
-              <span className="text-sm">Online status</span>
-            </div>
-          </div>
         </div>
       </div>
 
