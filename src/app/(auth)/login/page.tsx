@@ -68,20 +68,32 @@ export default function LoginPage() {
         </div>
 
         <div className="relative z-10 text-white max-w-lg text-center">
+          {/* Brand */}
+          <div className="flex items-center justify-center gap-3 mb-8">
+            <Image
+              src="/logo.svg"
+              alt="Shipper Chat"
+              width={44}
+              height={44}
+              className="rounded-xl"
+            />
+            <span className="text-2xl font-bold">Shipper Chat</span>
+          </div>
+
           {/* Illustration */}
           <div className="mb-6">
             <Image
               src="/undraw_ai-chat_ljb9.svg"
               alt="AI Chat illustration"
-              width={320}
-              height={240}
+              width={300}
+              height={225}
               className="mx-auto"
               priority
             />
           </div>
 
           {/* Text content */}
-          <h1 className="text-4xl font-bold mb-4">
+          <h1 className="text-3xl font-bold mb-3">
             Connect with your team in real-time
           </h1>
           <p className="text-lg text-white/80">
@@ -102,7 +114,7 @@ export default function LoginPage() {
                 width={40}
                 height={40}
               />
-              <span className="text-2xl font-bold">Shippr Chat</span>
+              <span className="text-2xl font-bold">Shipper Chat</span>
             </div>
           </div>
 
