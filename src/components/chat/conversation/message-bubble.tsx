@@ -425,7 +425,7 @@ export function MessageBubble({
                   {isPending ? (
                     <Clock className="h-3.5 w-3.5" />
                   ) : isRead ? (
-                    <CheckCheck className="h-3.5 w-3.5 text-blue-300" />
+                    <CheckCheck className="h-3.5 w-3.5 text-cyan-400" />
                   ) : isDelivered ? (
                     <CheckCheck className="h-3.5 w-3.5" />
                   ) : (
