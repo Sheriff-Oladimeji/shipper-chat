@@ -6,7 +6,6 @@ import {
   Home,
   MessageSquare,
   Archive,
-  Settings,
   LogOut,
   User,
 } from "lucide-react";
@@ -26,23 +25,23 @@ export function NavSidebar({ onOpenSettings }: NavSidebarProps) {
   const pathname = usePathname();
   const { user, logout } = useAuth();
   const { showArchived, setShowArchived } = useChatStore();
-  const [showSettingsMenu, setShowSettingsMenu] = useState(false);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
-  const settingsMenuRef = useRef<HTMLDivElement>(null);
+  const profileMenuRef = useRef<HTMLDivElement>(null);
 
   // Close menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (settingsMenuRef.current && !settingsMenuRef.current.contains(e.target as Node)) {
-        setShowSettingsMenu(false);
+      if (profileMenuRef.current && !profileMenuRef.current.contains(e.target as Node)) {
+        setShowProfileMenu(false);
       }
     };
 
-    if (showSettingsMenu) {
+    if (showProfileMenu) {
       document.addEventListener("mousedown", handleClickOutside);
       return () => document.removeEventListener("mousedown", handleClickOutside);
     }
-  }, [showSettingsMenu]);
+  }, [showProfileMenu]);
 
   const isMessagesActive = pathname === "/" || pathname.startsWith("/c/") || pathname === "/ai";
 
@@ -53,44 +52,44 @@ export function NavSidebar({ onOpenSettings }: NavSidebarProps) {
 
   return (
     <>
-      <aside className="flex h-full w-14 flex-col items-center border-r bg-background py-3">
+      <aside className="flex h-full w-14 flex-col items-center border-r bg-background py-4">
         {/* Logo */}
-        <div className="mb-3">
+        <div className="mb-4">
           <Image
             src="/logo.svg"
             alt="Shipper"
-            width={36}
-            height={36}
+            width={32}
+            height={32}
             className="rounded-lg"
           />
         </div>
 
         {/* Nav items */}
-        <nav className="flex flex-1 flex-col items-center gap-1">
+        <nav className="flex flex-1 flex-col items-center gap-2">
           <button
             onClick={() => {
               setShowArchived(false);
               router.push("/");
             }}
             className={cn(
-              "flex h-9 w-9 items-center justify-center rounded-lg transition-colors",
+              "flex h-10 w-10 items-center justify-center rounded-lg transition-colors",
               isMessagesActive && !showArchived
                 ? "bg-green-500 text-white"
                 : "text-muted-foreground hover:bg-muted hover:text-foreground"
             )}
             title="Home"
           >
-            <Home className="h-4 w-4" />
+            <Home className="h-5 w-5" />
           </button>
           <button
             onClick={() => {
               setShowArchived(false);
               router.push("/");
             }}
-            className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+            className="flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
             title="Messages"
           >
-            <MessageSquare className="h-4 w-4" />
+            <MessageSquare className="h-5 w-5" />
           </button>
           <button
             onClick={() => {
@@ -98,33 +97,39 @@ export function NavSidebar({ onOpenSettings }: NavSidebarProps) {
               router.push("/");
             }}
             className={cn(
-              "flex h-9 w-9 items-center justify-center rounded-lg transition-colors",
+              "flex h-10 w-10 items-center justify-center rounded-lg transition-colors",
               showArchived
                 ? "bg-green-500 text-white"
                 : "text-muted-foreground hover:bg-muted hover:text-foreground"
             )}
             title="Archive"
           >
-            <Archive className="h-4 w-4" />
+            <Archive className="h-5 w-5" />
           </button>
         </nav>
 
-        {/* Settings with dropdown */}
-        <div className="relative" ref={settingsMenuRef}>
-          <button
-            onClick={() => setShowSettingsMenu(!showSettingsMenu)}
-            className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors mb-2"
-            title="Settings"
-          >
-            <Settings className="h-4 w-4" />
-          </button>
+        {/* User avatar with dropdown */}
+        <div className="relative" ref={profileMenuRef}>
+          {user && (
+            <button
+              onClick={() => setShowProfileMenu(!showProfileMenu)}
+              className="rounded-full transition-opacity hover:opacity-80"
+              title="Profile"
+            >
+              <Avatar
+                src={user.image}
+                fallback={user.name}
+                size="sm"
+              />
+            </button>
+          )}
 
-          {showSettingsMenu && (
+          {showProfileMenu && (
             <div className="absolute bottom-0 left-12 z-50 w-48 rounded-lg border bg-card shadow-lg">
               <div className="p-1">
                 <button
                   onClick={() => {
-                    setShowSettingsMenu(false);
+                    setShowProfileMenu(false);
                     setShowProfileModal(true);
                   }}
                   className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors hover:bg-muted"
@@ -134,7 +139,7 @@ export function NavSidebar({ onOpenSettings }: NavSidebarProps) {
                 </button>
                 <button
                   onClick={() => {
-                    setShowSettingsMenu(false);
+                    setShowProfileMenu(false);
                     handleLogout();
                   }}
                   className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-red-600 transition-colors hover:bg-muted"
@@ -146,15 +151,6 @@ export function NavSidebar({ onOpenSettings }: NavSidebarProps) {
             </div>
           )}
         </div>
-
-        {/* User avatar */}
-        {user && (
-          <Avatar
-            src={user.image}
-            fallback={user.name}
-            size="sm"
-          />
-        )}
       </aside>
 
       {/* Profile Settings Modal */}

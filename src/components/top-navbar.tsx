@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { MessageCircle, Search, Bell, Settings, ChevronDown, LogOut, User } from "lucide-react";
+import { MessageCircle, Search, Bell, ChevronDown, LogOut, User } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/use-auth";
 import { useRouter } from "next/navigation";
@@ -51,14 +51,6 @@ export function TopNavbar() {
             className="flex h-9 w-9 items-center justify-center rounded-lg hover:bg-muted transition-colors"
           >
             <Bell className="h-5 w-5 text-muted-foreground" />
-          </button>
-
-          {/* Settings */}
-          <button
-            onClick={() => setShowProfileModal(true)}
-            className="flex h-9 w-9 items-center justify-center rounded-lg hover:bg-muted transition-colors"
-          >
-            <Settings className="h-5 w-5 text-muted-foreground" />
           </button>
 
           {/* User menu */}
