@@ -22,10 +22,11 @@ export function ConversationView({
   currentUserId,
 }: ConversationViewProps) {
   const [isContactInfoOpen, setIsContactInfoOpen] = useState(false);
-  const { messages, isLoading, sendMessage, isSending, markAllRead } =
+  const { messages, isLoading, sendMessage, isSending, markAllRead, reactToMessage } =
     useMessages(conversationId);
   const { sendTypingIndicator } = useConversationChannel(conversationId);
-  const { typingUsers } = useChatStore();
+  const { typingUsers, onlineUsers } = useChatStore();
+  const isOtherUserOnline = onlineUsers.has(otherUser.id);
 
   // Mark messages as read when viewing conversation
   useEffect(() => {
@@ -47,7 +48,8 @@ export function ConversationView({
       <ConversationHeader
         name={otherUser.name}
         image={otherUser.image}
-        isOnline={otherUser.isOnline}
+        isOnline={isOtherUserOnline}
+        lastSeenAt={otherUser.lastSeenAt}
         onOpenContactInfo={() => setIsContactInfoOpen(true)}
       />
       <MessageList
@@ -55,6 +57,7 @@ export function ConversationView({
         currentUserId={currentUserId}
         typingUserNames={typingUserNames}
         isLoading={isLoading}
+        onReact={reactToMessage}
       />
       <MessageInput
         onSend={handleSendMessage}

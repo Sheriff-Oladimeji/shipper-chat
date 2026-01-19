@@ -24,8 +24,10 @@ interface ChatState {
 
   // Online users
   onlineUsers: Set<string>;
+  setOnlineUsers: (users: string[] | ((prev: string[]) => string[])) => void;
   setUserOnline: (userId: string) => void;
   setUserOffline: (userId: string) => void;
+  isUserOnline: (userId: string) => boolean;
 
   // Typing indicators
   typingUsers: Record<string, string[]>; // conversationId -> userIds
@@ -96,6 +98,15 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
   // Online users
   onlineUsers: new Set(),
+  setOnlineUsers: (users) =>
+    set((state) => {
+      if (typeof users === "function") {
+        const currentArray = Array.from(state.onlineUsers);
+        const newArray = users(currentArray);
+        return { onlineUsers: new Set(newArray) };
+      }
+      return { onlineUsers: new Set(users) };
+    }),
   setUserOnline: (userId) =>
     set((state) => ({
       onlineUsers: new Set([...state.onlineUsers, userId]),
@@ -106,6 +117,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       newSet.delete(userId);
       return { onlineUsers: newSet };
     }),
+  isUserOnline: (userId) => get().onlineUsers.has(userId),
 
   // Typing indicators with auto-clear timeouts
   typingUsers: {},

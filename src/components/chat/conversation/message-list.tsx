@@ -14,6 +14,7 @@ interface MessageListProps {
   currentUserId: string;
   typingUserNames: string[];
   isLoading?: boolean;
+  onReact?: (messageId: string, emoji: string) => void;
 }
 
 export function MessageList({
@@ -21,6 +22,7 @@ export function MessageList({
   currentUserId,
   typingUserNames,
   isLoading = false,
+  onReact,
 }: MessageListProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -66,6 +68,7 @@ export function MessageList({
             <div key={message.id}>
               {showDateSeparator && <DateSeparator date={messageDate} />}
               <MessageBubble
+                id={message.id}
                 content={message.content}
                 timestamp={message.createdAt}
                 isOwn={message.senderId === currentUserId}
@@ -73,6 +76,13 @@ export function MessageList({
                 isDelivered={message.isDelivered}
                 isAiGenerated={message.isAiGenerated}
                 attachments={message.attachments}
+                senderImage={message.sender?.image}
+                reactions={message.reactions?.map(r => ({
+                  emoji: r.emoji,
+                  userId: r.userId,
+                  userName: r.user?.name,
+                }))}
+                onReact={onReact}
               />
             </div>
           );

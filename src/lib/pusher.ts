@@ -72,4 +72,6 @@ export const PUSHER_EVENTS = {
   TYPING_STOP: "typing-stop",
   USER_ONLINE: "user-online",
   USER_OFFLINE: "user-offline",
+  REACTION_ADDED: "reaction-added",
+  REACTION_REMOVED: "reaction-removed",
 } as const;

@@ -2,17 +2,18 @@
 
 import { useEffect, useRef, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { getPusherClient, getConversationChannel, getUserChannel, PUSHER_EVENTS } from "@/lib/pusher";
+import { getPusherClient, getConversationChannel, getUserChannel, PUSHER_EVENTS, PRESENCE_CHANNEL } from "@/lib/pusher";
 import { useChatStore } from "@/stores/chat-store";
 import type { Message } from "@/types";
 import type PusherClient from "pusher-js";
-import type { Channel } from "pusher-js";
+import type { Channel, PresenceChannel } from "pusher-js";
 
 export function usePusher(userId: string | undefined) {
   const queryClient = useQueryClient();
-  const { addMessage } = useChatStore();
+  const { addMessage, setOnlineUsers } = useChatStore();
   const pusherRef = useRef<PusherClient | null>(null);
   const userChannelRef = useRef<Channel | null>(null);
+  const presenceChannelRef = useRef<PresenceChannel | null>(null);
 
   useEffect(() => {
     if (!userId) return;
@@ -32,13 +33,37 @@ export function usePusher(userId: string | undefined) {
       queryClient.invalidateQueries({ queryKey: ["messages", data.conversationId] });
     });
 
+    // Subscribe to presence channel for online status
+    const presenceChannel = pusher.subscribe(PRESENCE_CHANNEL) as PresenceChannel;
+    presenceChannelRef.current = presenceChannel;
+
+    presenceChannel.bind("pusher:subscription_succeeded", (members: { each: (callback: (member: { id: string }) => void) => void }) => {
+      const onlineIds: string[] = [];
+      members.each((member: { id: string }) => {
+        onlineIds.push(member.id);
+      });
+      setOnlineUsers(onlineIds);
+    });
+
+    presenceChannel.bind("pusher:member_added", (member: { id: string }) => {
+      setOnlineUsers((prev: string[]) => [...prev.filter(id => id !== member.id), member.id]);
+    });
+
+    presenceChannel.bind("pusher:member_removed", (member: { id: string }) => {
+      setOnlineUsers((prev: string[]) => prev.filter(id => id !== member.id));
+    });
+
     return () => {
       if (userChannelRef.current && pusher) {
         userChannelRef.current.unbind_all();
         pusher.unsubscribe(getUserChannel(userId));
       }
+      if (presenceChannelRef.current && pusher) {
+        presenceChannelRef.current.unbind_all();
+        pusher.unsubscribe(PRESENCE_CHANNEL);
+      }
     };
-  }, [userId, addMessage, queryClient]);
+  }, [userId, addMessage, setOnlineUsers, queryClient]);
 
   return {
     pusher: pusherRef.current,

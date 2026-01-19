@@ -22,6 +22,7 @@ model User {
   conversationsAsUser1   Conversation[]         @relation("User1")
   conversationsAsUser2   Conversation[]         @relation("User2")
   conversationSettings   ConversationSettings[]
+  reactions              Reaction[]
 }
 
 model Conversation {
@@ -54,6 +55,7 @@ model Message {
   receiver     User         @relation("ReceivedMessages", fields: [receiverId], references: [id])
   conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   attachments  Attachment[]
+  reactions    Reaction[]
 
   @@index([conversationId])
   @@index([senderId])
@@ -92,4 +94,19 @@ model ConversationSettings {
   @@unique([userId, conversationId])
   @@index([userId])
   @@index([conversationId])
+}
+
+model Reaction {
+  id        String   @id @default(cuid())
+  emoji     String
+  userId    String
+  messageId String
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, messageId, emoji])
+  @@index([messageId])
+  @@index([userId])
 }

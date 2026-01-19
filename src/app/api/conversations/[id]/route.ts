@@ -2,6 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 
+// Consider a user online if they were active in the last 5 minutes
+const ONLINE_THRESHOLD_MS = 5 * 60 * 1000;
+
+function isUserOnline(lastSeenAt: Date | null): boolean {
+  if (!lastSeenAt) return false;
+  return Date.now() - new Date(lastSeenAt).getTime() < ONLINE_THRESHOLD_MS;
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -69,9 +77,28 @@ export async function GET(
     );
   }
 
+  // Update current user's lastSeenAt
+  await prisma.user.update({
+    where: { id: currentUser.id },
+    data: { lastSeenAt: new Date() },
+  });
+
+  // Compute online status dynamically
+  const conversationWithOnlineStatus = {
+    ...conversation,
+    user1: {
+      ...conversation.user1,
+      isOnline: isUserOnline(conversation.user1.lastSeenAt),
+    },
+    user2: {
+      ...conversation.user2,
+      isOnline: isUserOnline(conversation.user2.lastSeenAt),
+    },
+  };
+
   return NextResponse.json({
     success: true,
-    data: conversation,
+    data: conversationWithOnlineStatus,
   });
 }
 

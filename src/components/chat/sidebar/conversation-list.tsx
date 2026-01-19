@@ -5,6 +5,7 @@ import { ConversationItem } from "./conversation-item";
 import type { ConversationWithDetails } from "@/types";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
+import { useChatStore } from "@/stores/chat-store";
 
 interface ConversationListProps {
   conversations: ConversationWithDetails[];
@@ -54,6 +55,7 @@ export function ConversationList({
   onSelectConversation,
 }: ConversationListProps) {
   const queryClient = useQueryClient();
+  const { onlineUsers } = useChatStore();
 
   const settingsMutation = useMutation({
     mutationFn: ({
@@ -189,7 +191,7 @@ export function ConversationList({
               lastMessage={lastMessage?.content}
               lastMessageTime={lastMessage?.createdAt}
               unreadCount={conversation.unreadCount}
-              isOnline={otherUser.isOnline}
+              isOnline={onlineUsers.has(otherUser.id)}
               isActive={conversation.id === activeConversationId}
               isRead={lastMessage?.isRead}
               isSentByMe={isSentByMe}

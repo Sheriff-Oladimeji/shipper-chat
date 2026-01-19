@@ -50,6 +50,19 @@ async function markAllRead(conversationId: string): Promise<void> {
   });
 }
 
+async function reactToMessage(messageId: string, emoji: string): Promise<{ action: string }> {
+  const response = await fetch(`/api/messages/${messageId}/reactions`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ emoji }),
+  });
+  if (!response.ok) {
+    throw new Error("Failed to react to message");
+  }
+  const data = await response.json();
+  return data;
+}
+
 export function useMessages(conversationId: string | null) {
   const queryClient = useQueryClient();
   const { setMessages, addMessage } = useChatStore();
@@ -92,6 +105,14 @@ export function useMessages(conversationId: string | null) {
     },
   });
 
+  const reactMutation = useMutation({
+    mutationFn: ({ messageId, emoji }: { messageId: string; emoji: string }) =>
+      reactToMessage(messageId, emoji),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["messages", conversationId] });
+    },
+  });
+
   return {
     messages,
     isLoading,
@@ -101,5 +122,7 @@ export function useMessages(conversationId: string | null) {
       sendMutation.mutate({ content, attachments }),
     isSending: sendMutation.isPending,
     markAllRead: markReadMutation.mutate,
+    reactToMessage: (messageId: string, emoji: string) =>
+      reactMutation.mutate({ messageId, emoji }),
   };
 }

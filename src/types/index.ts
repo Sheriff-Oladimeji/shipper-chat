@@ -6,7 +6,7 @@ export interface User {
   image: string | null;
   googleId: string | null;
   isOnline: boolean;
-  lastSeenAt: Date;
+  lastSeenAt: Date | string;
   createdAt: Date;
 }
 
@@ -29,6 +29,17 @@ export interface Attachment {
   createdAt: Date;
 }
 
+export interface Reaction {
+  id: string;
+  emoji: string;
+  userId: string;
+  messageId: string;
+  user?: {
+    id: string;
+    name: string;
+  };
+}
+
 export interface Message {
   id: string;
   content: string;
@@ -40,6 +51,12 @@ export interface Message {
   isAiGenerated: boolean;
   createdAt: Date;
   attachments?: Attachment[];
+  sender?: {
+    id: string;
+    name: string;
+    image: string | null;
+  };
+  reactions?: Reaction[];
 }
 
 export interface ConversationSettings {

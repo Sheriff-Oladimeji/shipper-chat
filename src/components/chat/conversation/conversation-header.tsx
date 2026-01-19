@@ -4,11 +4,13 @@ import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Phone, Video, MoreVertical, ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { formatDistanceToNow } from "date-fns";
 
 interface ConversationHeaderProps {
   name: string;
   image?: string | null;
   isOnline?: boolean;
+  lastSeenAt?: Date | string | null;
   onBack?: () => void;
   onOpenContactInfo?: () => void;
 }
@@ -17,6 +19,7 @@ export function ConversationHeader({
   name,
   image,
   isOnline = false,
+  lastSeenAt,
   onBack,
   onOpenContactInfo,
 }: ConversationHeaderProps) {
@@ -56,6 +59,8 @@ export function ConversationHeader({
             <p className="text-sm text-muted-foreground">
               {isOnline ? (
                 <span className="text-green-500">Online</span>
+              ) : lastSeenAt ? (
+                `last seen ${formatDistanceToNow(new Date(lastSeenAt), { addSuffix: true })}`
               ) : (
                 "Offline"
               )}
