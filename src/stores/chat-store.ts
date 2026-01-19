@@ -21,6 +21,7 @@ interface ChatState {
   setMessages: (conversationId: string, messages: Message[]) => void;
   addMessage: (conversationId: string, message: Message) => void;
   updateMessage: (conversationId: string, messageId: string, updates: Partial<Message>) => void;
+  markAllMessagesRead: (conversationId: string, readByUserId: string) => void;
 
   // Online users
   onlineUsers: Set<string>;
@@ -92,6 +93,15 @@ export const useChatStore = create<ChatState>((set, get) => ({
         ...state.messagesByConversation,
         [conversationId]: (state.messagesByConversation[conversationId] || []).map(
           (m) => (m.id === messageId ? { ...m, ...updates } : m)
+        ),
+      },
+    })),
+  markAllMessagesRead: (conversationId, readByUserId) =>
+    set((state) => ({
+      messagesByConversation: {
+        ...state.messagesByConversation,
+        [conversationId]: (state.messagesByConversation[conversationId] || []).map(
+          (m) => (m.receiverId === readByUserId ? { ...m, isRead: true } : m)
         ),
       },
     })),

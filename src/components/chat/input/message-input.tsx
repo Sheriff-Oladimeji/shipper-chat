@@ -570,14 +570,10 @@ export function MessageInput({
           <Button
             type="submit"
             size="icon"
-            disabled={!canSend || isSending || disabled}
+            disabled={!canSend || disabled}
             className="shrink-0 h-10 w-10 rounded-full bg-green-500 hover:bg-green-600 text-white"
           >
-            {isSending ? (
-              <Loader2 className="h-5 w-5 animate-spin" />
-            ) : (
-              <Send className="h-5 w-5" />
-            )}
+            <Send className="h-5 w-5" />
           </Button>
         </div>
       )}

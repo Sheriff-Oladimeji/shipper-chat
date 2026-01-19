@@ -72,7 +72,7 @@ export function usePusher(userId: string | undefined) {
 
 export function useConversationChannel(conversationId: string | null) {
   const queryClient = useQueryClient();
-  const { addMessage, setUserTyping, updateMessage } = useChatStore();
+  const { addMessage, setUserTyping, updateMessage, markAllMessagesRead } = useChatStore();
   const channelRef = useRef<Channel | null>(null);
   const pusherRef = useRef<PusherClient | null>(null);
 
@@ -101,7 +101,11 @@ export function useConversationChannel(conversationId: string | null) {
 
     channel.bind(PUSHER_EVENTS.MESSAGE_READ, (data: { messageId?: string; conversationId?: string; readBy: string }) => {
       if (data.messageId) {
+        // Single message read
         updateMessage(conversationId, data.messageId, { isRead: true });
+      } else if (data.conversationId) {
+        // All messages in conversation marked as read by recipient
+        markAllMessagesRead(conversationId, data.readBy);
       }
       queryClient.invalidateQueries({ queryKey: ["messages", conversationId] });
     });
@@ -112,7 +116,7 @@ export function useConversationChannel(conversationId: string | null) {
         pusherRef.current.unsubscribe(getConversationChannel(conversationId));
       }
     };
-  }, [conversationId, addMessage, setUserTyping, updateMessage, queryClient]);
+  }, [conversationId, addMessage, setUserTyping, updateMessage, markAllMessagesRead, queryClient]);
 
   const sendTypingIndicator = useCallback(
     async (isTyping: boolean) => {
