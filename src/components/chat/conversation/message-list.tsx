@@ -2,11 +2,11 @@
 
 import { useEffect, useRef } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Skeleton } from "@/components/ui/skeleton";
 import { MessageBubble } from "./message-bubble";
 import { DateSeparator } from "./date-separator";
 import { TypingIndicator } from "./typing-indicator";
-import { Loader2 } from "lucide-react";
-import { format, isSameDay } from "date-fns";
+import { isSameDay } from "date-fns";
 import type { Message } from "@/types";
 
 interface OptimisticMessage extends Message {
@@ -37,8 +37,53 @@ export function MessageList({
 
   if (isLoading) {
     return (
-      <div className="flex-1 flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      <div className="flex-1 px-4 py-4 space-y-4">
+        {/* Skeleton messages - alternating left and right */}
+        <div className="flex justify-start">
+          <div className="flex gap-2 max-w-[70%]">
+            <Skeleton className="h-8 w-8 rounded-full shrink-0" />
+            <div className="space-y-2">
+              <Skeleton className="h-16 w-48 rounded-2xl rounded-tl-sm" />
+              <Skeleton className="h-3 w-16" />
+            </div>
+          </div>
+        </div>
+        <div className="flex justify-end">
+          <div className="space-y-2">
+            <Skeleton className="h-12 w-56 rounded-2xl rounded-tr-sm bg-primary/20" />
+            <Skeleton className="h-3 w-16 ml-auto" />
+          </div>
+        </div>
+        <div className="flex justify-start">
+          <div className="flex gap-2 max-w-[70%]">
+            <Skeleton className="h-8 w-8 rounded-full shrink-0" />
+            <div className="space-y-2">
+              <Skeleton className="h-10 w-64 rounded-2xl rounded-tl-sm" />
+              <Skeleton className="h-3 w-16" />
+            </div>
+          </div>
+        </div>
+        <div className="flex justify-end">
+          <div className="space-y-2">
+            <Skeleton className="h-20 w-52 rounded-2xl rounded-tr-sm bg-primary/20" />
+            <Skeleton className="h-3 w-16 ml-auto" />
+          </div>
+        </div>
+        <div className="flex justify-start">
+          <div className="flex gap-2 max-w-[70%]">
+            <Skeleton className="h-8 w-8 rounded-full shrink-0" />
+            <div className="space-y-2">
+              <Skeleton className="h-12 w-40 rounded-2xl rounded-tl-sm" />
+              <Skeleton className="h-3 w-16" />
+            </div>
+          </div>
+        </div>
+        <div className="flex justify-end">
+          <div className="space-y-2">
+            <Skeleton className="h-10 w-44 rounded-2xl rounded-tr-sm bg-primary/20" />
+            <Skeleton className="h-3 w-16 ml-auto" />
+          </div>
+        </div>
       </div>
     );
   }
