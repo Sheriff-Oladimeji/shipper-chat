@@ -54,7 +54,7 @@ export default function ConversationPage() {
           <p className="text-muted-foreground">Conversation not found</p>
           <button
             onClick={() => router.push("/")}
-            className="mt-4 text-green-500 hover:underline"
+            className="mt-4 text-primary hover:underline"
           >
             Go back to conversations
           </button>

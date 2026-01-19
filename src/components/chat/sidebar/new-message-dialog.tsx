@@ -94,9 +94,9 @@ export function NewMessageDialog({
                     onClick={handleSelectShipperAI}
                     className="flex w-full items-center gap-3 rounded-lg p-3 text-left transition-colors hover:bg-muted"
                   >
-                    <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-green-400 to-green-600">
+                    <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary/80 to-primary">
                       <Sparkles className="h-5 w-5 text-white" />
-                      <span className="absolute bottom-0 right-0 block h-3 w-3 rounded-full border-2 border-white bg-green-500" />
+                      <span className="absolute bottom-0 right-0 block h-3 w-3 rounded-full border-2 border-white bg-primary" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-medium truncate">{SHIPPER_AI.name}</p>

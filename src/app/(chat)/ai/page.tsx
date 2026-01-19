@@ -90,7 +90,7 @@ export default function AIChat() {
         />
         <div>
           <h1 className="font-semibold text-foreground">Shipper AI</h1>
-          <p className="text-xs text-green-500">Online</p>
+          <p className="text-xs text-primary">Online</p>
         </div>
       </div>
 
@@ -136,7 +136,7 @@ export default function AIChat() {
                   className={cn(
                     "max-w-[80%] rounded-2xl px-4 py-2",
                     message.role === "user"
-                      ? "bg-green-500 text-white"
+                      ? "bg-primary text-white"
                       : "bg-muted text-foreground"
                   )}
                 >
@@ -189,7 +189,7 @@ export default function AIChat() {
             type="submit"
             size="icon"
             disabled={!input.trim() || mutation.isPending}
-            className="bg-green-500 hover:bg-green-600"
+            className="bg-primary hover:bg-primary/90"
           >
             {mutation.isPending ? (
               <Loader2 className="h-4 w-4 animate-spin" />

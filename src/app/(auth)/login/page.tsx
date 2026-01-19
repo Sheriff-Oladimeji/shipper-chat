@@ -11,7 +11,7 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-screen">
       {/* Left side - Branding */}
-      <div className="hidden lg:flex lg:w-1/2 bg-linear-to-br from-green-500 to-green-600 items-center justify-center p-12">
+      <div className="hidden lg:flex lg:w-1/2 bg-linear-to-br from-primary to-primary/80 items-center justify-center p-12">
         <div className="text-white max-w-md">
           <div className="flex items-center gap-3 mb-8">
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/20">
@@ -60,7 +60,7 @@ export default function LoginPage() {
         <div className="w-full max-w-md space-y-8">
           <div className="text-center lg:hidden">
             <div className="flex items-center justify-center gap-3 mb-4">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-500">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary">
                 <MessageSquare className="h-6 w-6 text-white" />
               </div>
               <span className="text-2xl font-bold">Shippr Chat</span>
@@ -104,11 +104,11 @@ export default function LoginPage() {
 
           <div className="text-center text-sm text-muted-foreground">
             By signing in, you agree to our{" "}
-            <a href="#" className="text-green-500 hover:underline">
+            <a href="#" className="text-primary hover:underline">
               Terms of Service
             </a>{" "}
             and{" "}
-            <a href="#" className="text-green-500 hover:underline">
+            <a href="#" className="text-primary hover:underline">
               Privacy Policy
             </a>
           </div>

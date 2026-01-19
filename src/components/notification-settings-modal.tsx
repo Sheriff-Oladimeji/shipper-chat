@@ -40,7 +40,7 @@ export function NotificationSettingsModal({ open, onOpenChange }: NotificationSe
           <div className="flex items-center justify-between p-3 rounded-lg border">
             <div className="flex items-center gap-3">
               {notificationsEnabled ? (
-                <Bell className="h-5 w-5 text-green-500" />
+                <Bell className="h-5 w-5 text-primary" />
               ) : (
                 <BellOff className="h-5 w-5 text-muted-foreground" />
               )}
@@ -54,7 +54,7 @@ export function NotificationSettingsModal({ open, onOpenChange }: NotificationSe
             <button
               onClick={() => setNotificationsEnabled(!notificationsEnabled)}
               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                notificationsEnabled ? "bg-green-500" : "bg-muted"
+                notificationsEnabled ? "bg-primary" : "bg-muted"
               }`}
             >
               <span
@@ -69,7 +69,7 @@ export function NotificationSettingsModal({ open, onOpenChange }: NotificationSe
           <div className="flex items-center justify-between p-3 rounded-lg border">
             <div className="flex items-center gap-3">
               {soundEnabled ? (
-                <Volume2 className="h-5 w-5 text-green-500" />
+                <Volume2 className="h-5 w-5 text-primary" />
               ) : (
                 <VolumeX className="h-5 w-5 text-muted-foreground" />
               )}
@@ -83,7 +83,7 @@ export function NotificationSettingsModal({ open, onOpenChange }: NotificationSe
             <button
               onClick={() => setSoundEnabled(!soundEnabled)}
               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                soundEnabled ? "bg-green-500" : "bg-muted"
+                soundEnabled ? "bg-primary" : "bg-muted"
               }`}
             >
               <span
@@ -98,7 +98,7 @@ export function NotificationSettingsModal({ open, onOpenChange }: NotificationSe
         <div className="mt-6 flex justify-end">
           <Button
             onClick={() => onOpenChange(false)}
-            className="bg-green-500 hover:bg-green-600"
+            className="bg-primary hover:bg-primary/90"
           >
             Done
           </Button>

@@ -101,7 +101,7 @@ export function NewMessageDropdown({
                 onClick={onSelectShipperAI}
                 className="flex w-full items-center gap-2.5 px-2.5 py-2 text-left transition-colors hover:bg-muted"
               >
-                <div className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-green-400 to-green-600">
+                <div className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary/80 to-primary">
                   <Sparkles className="h-4 w-4 text-white" />
                 </div>
                 <div className="flex-1 min-w-0">

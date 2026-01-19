@@ -63,7 +63,7 @@ export function SearchBar({ value, onChange, filter = "all", onFilterChange }: S
           <Button
             variant="ghost"
             size="icon"
-            className={cn("shrink-0", isFiltered && "text-green-500")}
+            className={cn("shrink-0", isFiltered && "text-primary")}
             onClick={() => setShowFilterMenu(!showFilterMenu)}
           >
             <Filter className="h-4 w-4" />
@@ -80,7 +80,7 @@ export function SearchBar({ value, onChange, filter = "all", onFilterChange }: S
                   >
                     <span>{option.label}</span>
                     {filter === option.value && (
-                      <Check className="h-4 w-4 text-green-500" />
+                      <Check className="h-4 w-4 text-primary" />
                     )}
                   </button>
                 ))}

@@ -60,7 +60,7 @@ interface ConversationMediaResponse {
 function getFileIcon(mimeType: string) {
   if (mimeType.includes("pdf")) return "bg-red-500";
   if (mimeType.includes("word") || mimeType.includes("document")) return "bg-blue-500";
-  if (mimeType.includes("excel") || mimeType.includes("spreadsheet")) return "bg-green-500";
+  if (mimeType.includes("excel") || mimeType.includes("spreadsheet")) return "bg-primary";
   if (mimeType.includes("powerpoint") || mimeType.includes("presentation")) return "bg-orange-500";
   return "bg-gray-500";
 }
@@ -184,7 +184,7 @@ export function ContactInfoPanel({
             <TabsTrigger
               value="media"
               className={cn(
-                "rounded-none py-3 text-sm font-medium border-b-2 border-transparent data-[state=active]:border-green-500 data-[state=active]:bg-transparent data-[state=active]:text-green-500"
+                "rounded-none py-3 text-sm font-medium border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary"
               )}
             >
               <Image className="h-4 w-4 mr-1.5" />
@@ -193,7 +193,7 @@ export function ContactInfoPanel({
             <TabsTrigger
               value="link"
               className={cn(
-                "rounded-none py-3 text-sm font-medium border-b-2 border-transparent data-[state=active]:border-green-500 data-[state=active]:bg-transparent data-[state=active]:text-green-500"
+                "rounded-none py-3 text-sm font-medium border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary"
               )}
             >
               <Link2 className="h-4 w-4 mr-1.5" />
@@ -202,7 +202,7 @@ export function ContactInfoPanel({
             <TabsTrigger
               value="docs"
               className={cn(
-                "rounded-none py-3 text-sm font-medium border-b-2 border-transparent data-[state=active]:border-green-500 data-[state=active]:bg-transparent data-[state=active]:text-green-500"
+                "rounded-none py-3 text-sm font-medium border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary"
               )}
             >
               <FileText className="h-4 w-4 mr-1.5" />
@@ -287,7 +287,7 @@ export function ContactInfoPanel({
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">{extractDomain(link.url)}</p>
-                      <p className="text-xs text-green-500 truncate mt-0.5">
+                      <p className="text-xs text-primary truncate mt-0.5">
                         {link.url}
                       </p>
                     </div>

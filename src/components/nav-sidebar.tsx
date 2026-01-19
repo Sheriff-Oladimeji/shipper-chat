@@ -74,7 +74,7 @@ export function NavSidebar({ onOpenSettings }: NavSidebarProps) {
             className={cn(
               "flex h-10 w-10 items-center justify-center rounded-lg transition-colors",
               isMessagesActive && !showArchived
-                ? "bg-green-500 text-white"
+                ? "bg-primary text-white"
                 : "text-muted-foreground hover:bg-muted hover:text-foreground"
             )}
             title="Home"
@@ -99,7 +99,7 @@ export function NavSidebar({ onOpenSettings }: NavSidebarProps) {
             className={cn(
               "flex h-10 w-10 items-center justify-center rounded-lg transition-colors",
               showArchived
-                ? "bg-green-500 text-white"
+                ? "bg-primary text-white"
                 : "text-muted-foreground hover:bg-muted hover:text-foreground"
             )}
             title="Archive"

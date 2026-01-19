@@ -122,9 +122,9 @@ export function Sidebar({ currentUserId }: SidebarProps) {
                 isAIActive && "bg-muted"
               )}
             >
-              <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-green-400 to-green-600">
+              <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary/80 to-primary">
                 <Sparkles className="h-6 w-6 text-white" />
-                <span className="absolute bottom-0 right-0 block h-3.5 w-3.5 rounded-full border-2 border-white bg-green-500" />
+                <span className="absolute bottom-0 right-0 block h-3.5 w-3.5 rounded-full border-2 border-white bg-primary" />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between">

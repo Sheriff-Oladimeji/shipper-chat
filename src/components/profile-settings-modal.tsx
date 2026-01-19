@@ -123,7 +123,7 @@ export function ProfileSettingsModal({ open, onOpenChange }: ProfileSettingsModa
             <Button
               type="submit"
               disabled={mutation.isPending || !name.trim() || name === user?.name}
-              className="bg-green-500 hover:bg-green-600"
+              className="bg-primary hover:bg-primary/90"
             >
               {mutation.isPending ? (
                 <>
