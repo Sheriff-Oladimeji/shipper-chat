@@ -1,11 +1,24 @@
 "use client";
 
+import React, { useState } from "react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { Check, CheckCheck, Sparkles, FileText, Download, Play } from "lucide-react";
+import { Check, CheckCheck, Sparkles, Download, Play } from "lucide-react";
 import type { Attachment } from "@/types";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+} from "@/components/ui/context-menu";
+
+interface Reaction {
+  emoji: string;
+  userId: string;
+  userName?: string;
+}
 
 interface MessageBubbleProps {
+  id?: string;
   content: string;
   timestamp: Date | string;
   isOwn: boolean;
@@ -15,7 +28,12 @@ interface MessageBubbleProps {
   senderName?: string;
   senderImage?: string | null;
   attachments?: Attachment[];
+  reactions?: Reaction[];
+  onReact?: (messageId: string, emoji: string) => void;
 }
+
+// Quick reaction emojis
+const quickReactions = ["👍", "❤️", "😂", "😮", "😢", "🙏"];
 
 function formatFileSize(bytes: number): string {
   if (bytes < 1024) return bytes + " B";
@@ -25,6 +43,50 @@ function formatFileSize(bytes: number): string {
 
 function getFileExtension(name: string): string {
   return name.split(".").pop()?.toUpperCase() || "FILE";
+}
+
+// URL regex to detect links in messages
+const urlRegex = /(https?:\/\/[^\s<>"{}|\\^`\[\]]+|www\.[^\s<>"{}|\\^`\[\]]+)/gi;
+
+// Parse message content and convert URLs to clickable links
+function parseMessageContent(content: string, isOwn: boolean): React.ReactNode {
+  const matches = content.match(urlRegex);
+
+  if (!matches || matches.length === 0) {
+    return content;
+  }
+
+  const parts = content.split(urlRegex);
+  const result: React.ReactNode[] = [];
+
+  for (let i = 0; i < parts.length; i++) {
+    const part = parts[i];
+    if (part) {
+      // Check if this part is a URL
+      if (matches.includes(part)) {
+        const href = part.startsWith("http") ? part : `https://${part}`;
+        result.push(
+          <a
+            key={`link-${i}`}
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={cn(
+              "underline hover:no-underline",
+              isOwn ? "text-white" : "text-blue-500"
+            )}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {part}
+          </a>
+        );
+      } else {
+        result.push(<span key={`text-${i}`}>{part}</span>);
+      }
+    }
+  }
+
+  return result;
 }
 
 function AttachmentPreview({ attachment, isOwn }: { attachment: Attachment; isOwn: boolean }) {
@@ -106,6 +168,7 @@ function AttachmentPreview({ attachment, isOwn }: { attachment: Attachment; isOw
 }
 
 export function MessageBubble({
+  id,
   content,
   timestamp,
   isOwn,
@@ -114,10 +177,46 @@ export function MessageBubble({
   isAiGenerated = false,
   senderName,
   attachments = [],
+  reactions = [],
+  onReact,
 }: MessageBubbleProps) {
+  const [showReactionPicker, setShowReactionPicker] = useState(false);
   const time = format(new Date(timestamp), "h:mm a");
   const hasAttachments = attachments && attachments.length > 0;
   const hasContent = content && content.trim().length > 0;
+  const hasReactions = reactions && reactions.length > 0;
+
+  // Group reactions by emoji
+  const groupedReactions = reactions.reduce((acc, reaction) => {
+    if (!acc[reaction.emoji]) {
+      acc[reaction.emoji] = [];
+    }
+    acc[reaction.emoji].push(reaction);
+    return acc;
+  }, {} as Record<string, Reaction[]>);
+
+  const handleReact = (emoji: string) => {
+    if (onReact && id) {
+      onReact(id, emoji);
+    }
+    setShowReactionPicker(false);
+  };
+
+  const contextMenuContent = (
+    <ContextMenuContent>
+      <div className="flex gap-1 p-2">
+        {quickReactions.map((emoji) => (
+          <button
+            key={emoji}
+            onClick={() => handleReact(emoji)}
+            className="text-xl hover:scale-125 transition-transform p-1 rounded hover:bg-muted"
+          >
+            {emoji}
+          </button>
+        ))}
+      </div>
+    </ContextMenuContent>
+  );
 
   return (
     <div
@@ -126,68 +225,101 @@ export function MessageBubble({
         isOwn ? "justify-end" : "justify-start"
       )}
     >
-      <div
-        className={cn(
-          "max-w-[70%] rounded-2xl",
-          hasAttachments && !hasContent ? "p-1" : "px-4 py-2",
-          isOwn
-            ? "bg-green-500 text-white rounded-br-md"
-            : "bg-muted text-foreground rounded-bl-md",
-          isAiGenerated && "border-2 border-purple-400"
-        )}
-      >
-        {isAiGenerated && (
-          <div className="flex items-center gap-1 text-xs opacity-80 mb-1 px-3 pt-1">
-            <Sparkles className="h-3 w-3" />
-            <span>AI Generated</span>
-          </div>
-        )}
+      <div className="relative">
+        <ContextMenu menu={contextMenuContent}>
+          <div
+            className={cn(
+              "max-w-[70%] rounded-2xl",
+              hasAttachments && !hasContent ? "p-1" : "px-4 py-2",
+              isOwn
+                ? "bg-green-500 text-white rounded-br-md"
+                : "bg-muted text-foreground rounded-bl-md",
+              isAiGenerated && "border-2 border-purple-400"
+            )}
+            onDoubleClick={() => handleReact("❤️")}
+          >
+            {isAiGenerated && (
+              <div className="flex items-center gap-1 text-xs opacity-80 mb-1 px-3 pt-1">
+                <Sparkles className="h-3 w-3" />
+                <span>AI Generated</span>
+              </div>
+            )}
 
-        {/* Attachments */}
-        {hasAttachments && (
-          <div className={cn(
-            "space-y-2",
-            hasContent && "mb-2"
-          )}>
-            {attachments.map((attachment) => (
-              <AttachmentPreview
-                key={attachment.id}
-                attachment={attachment}
-                isOwn={isOwn}
-              />
+            {/* Attachments */}
+            {hasAttachments && (
+              <div className={cn(
+                "space-y-2",
+                hasContent && "mb-2"
+              )}>
+                {attachments.map((attachment) => (
+                  <AttachmentPreview
+                    key={attachment.id}
+                    attachment={attachment}
+                    isOwn={isOwn}
+                  />
+                ))}
+              </div>
+            )}
+
+            {/* Message content */}
+            {hasContent && (
+              <p className={cn(
+                "text-sm whitespace-pre-wrap break-words",
+                hasAttachments && "px-3"
+              )}>{parseMessageContent(content, isOwn)}</p>
+            )}
+
+            {/* Timestamp and read status */}
+            <div
+              className={cn(
+                "flex items-center justify-end gap-1 mt-1",
+                isOwn ? "text-white/70" : "text-muted-foreground",
+                hasAttachments && !hasContent && "px-3 pb-1"
+              )}
+            >
+              <span className="text-xs">{time}</span>
+              {isOwn && (
+                <span className="ml-1">
+                  {isRead ? (
+                    <CheckCheck className="h-4 w-4 text-blue-300" />
+                  ) : isDelivered ? (
+                    <CheckCheck className="h-4 w-4" />
+                  ) : (
+                    <Check className="h-4 w-4" />
+                  )}
+                </span>
+              )}
+            </div>
+          </div>
+        </ContextMenu>
+
+        {/* Reactions display */}
+        {hasReactions && (
+          <div
+            className={cn(
+              "flex flex-wrap gap-1 mt-1",
+              isOwn ? "justify-end" : "justify-start"
+            )}
+          >
+            {Object.entries(groupedReactions).map(([emoji, reactionList]) => (
+              <button
+                key={emoji}
+                onClick={() => handleReact(emoji)}
+                className={cn(
+                  "flex items-center gap-1 px-2 py-0.5 rounded-full text-xs",
+                  "bg-muted hover:bg-muted/80 transition-colors",
+                  "border border-border"
+                )}
+                title={reactionList.map((r) => r.userName || "Someone").join(", ")}
+              >
+                <span>{emoji}</span>
+                {reactionList.length > 1 && (
+                  <span className="text-muted-foreground">{reactionList.length}</span>
+                )}
+              </button>
             ))}
           </div>
         )}
-
-        {/* Message content */}
-        {hasContent && (
-          <p className={cn(
-            "text-sm whitespace-pre-wrap break-words",
-            hasAttachments && "px-3"
-          )}>{content}</p>
-        )}
-
-        {/* Timestamp and read status */}
-        <div
-          className={cn(
-            "flex items-center justify-end gap-1 mt-1",
-            isOwn ? "text-white/70" : "text-muted-foreground",
-            hasAttachments && !hasContent && "px-3 pb-1"
-          )}
-        >
-          <span className="text-xs">{time}</span>
-          {isOwn && (
-            <span className="ml-1">
-              {isRead ? (
-                <CheckCheck className="h-4 w-4 text-blue-300" />
-              ) : isDelivered ? (
-                <CheckCheck className="h-4 w-4" />
-              ) : (
-                <Check className="h-4 w-4" />
-              )}
-            </span>
-          )}
-        </div>
       </div>
     </div>
   );

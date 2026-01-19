@@ -14,6 +14,8 @@
   },
   "dependencies": {
     "@ai-sdk/google": "^3.0.10",
+    "@emoji-mart/data": "^1.2.1",
+    "@emoji-mart/react": "^1.1.1",
     "@prisma/adapter-pg": "^7.2.0",
     "@prisma/client": "^7.2.0",
     "@radix-ui/react-dialog": "^1.1.15",
