@@ -125,7 +125,7 @@ export function ConversationList({
     (id: string) => {
       if (confirm("Are you sure you want to clear this chat? All messages will be deleted.")) {
         // TODO: Implement clear chat API
-        console.log("Clear chat:", id);
+       
       }
     },
     []
