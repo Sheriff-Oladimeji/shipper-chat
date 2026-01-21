@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { X, Bell, BellOff, Volume2, VolumeX } from "lucide-react";
+import { X, Bell, BellOff, Volume2, VolumeX, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useChatStore } from "@/stores/chat-store";
 
 interface NotificationSettingsModalProps {
   open: boolean;
@@ -10,8 +10,7 @@ interface NotificationSettingsModalProps {
 }
 
 export function NotificationSettingsModal({ open, onOpenChange }: NotificationSettingsModalProps) {
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
-  const [soundEnabled, setSoundEnabled] = useState(true);
+  const { notificationSettings, setNotificationSettings } = useChatStore();
 
   if (!open) return null;
 
@@ -36,30 +35,30 @@ export function NotificationSettingsModal({ open, onOpenChange }: NotificationSe
         </div>
 
         <div className="space-y-4">
-          {/* Notifications toggle */}
+          {/* In-app notifications toggle */}
           <div className="flex items-center justify-between p-3 rounded-lg border">
             <div className="flex items-center gap-3">
-              {notificationsEnabled ? (
-                <Bell className="h-5 w-5 text-primary" />
+              {notificationSettings.inAppEnabled ? (
+                <MessageSquare className="h-5 w-5 text-primary" />
               ) : (
-                <BellOff className="h-5 w-5 text-muted-foreground" />
+                <MessageSquare className="h-5 w-5 text-muted-foreground" />
               )}
               <div>
-                <p className="font-medium">Push Notifications</p>
+                <p className="font-medium">In-App Notifications</p>
                 <p className="text-sm text-muted-foreground">
-                  Receive notifications for new messages
+                  Show toast notifications for new messages
                 </p>
               </div>
             </div>
             <button
-              onClick={() => setNotificationsEnabled(!notificationsEnabled)}
+              onClick={() => setNotificationSettings({ inAppEnabled: !notificationSettings.inAppEnabled })}
               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                notificationsEnabled ? "bg-primary" : "bg-muted"
+                notificationSettings.inAppEnabled ? "bg-primary" : "bg-muted"
               }`}
             >
               <span
                 className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  notificationsEnabled ? "translate-x-6" : "translate-x-1"
+                  notificationSettings.inAppEnabled ? "translate-x-6" : "translate-x-1"
                 }`}
               />
             </button>
@@ -68,7 +67,7 @@ export function NotificationSettingsModal({ open, onOpenChange }: NotificationSe
           {/* Sound toggle */}
           <div className="flex items-center justify-between p-3 rounded-lg border">
             <div className="flex items-center gap-3">
-              {soundEnabled ? (
+              {notificationSettings.soundEnabled ? (
                 <Volume2 className="h-5 w-5 text-primary" />
               ) : (
                 <VolumeX className="h-5 w-5 text-muted-foreground" />
@@ -81,14 +80,53 @@ export function NotificationSettingsModal({ open, onOpenChange }: NotificationSe
               </div>
             </div>
             <button
-              onClick={() => setSoundEnabled(!soundEnabled)}
+              onClick={() => setNotificationSettings({ soundEnabled: !notificationSettings.soundEnabled })}
               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                soundEnabled ? "bg-primary" : "bg-muted"
+                notificationSettings.soundEnabled ? "bg-primary" : "bg-muted"
               }`}
             >
               <span
                 className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  soundEnabled ? "translate-x-6" : "translate-x-1"
+                  notificationSettings.soundEnabled ? "translate-x-6" : "translate-x-1"
+                }`}
+              />
+            </button>
+          </div>
+
+          {/* Desktop notifications toggle */}
+          <div className="flex items-center justify-between p-3 rounded-lg border">
+            <div className="flex items-center gap-3">
+              {notificationSettings.desktopEnabled ? (
+                <Bell className="h-5 w-5 text-primary" />
+              ) : (
+                <BellOff className="h-5 w-5 text-muted-foreground" />
+              )}
+              <div>
+                <p className="font-medium">Desktop Notifications</p>
+                <p className="text-sm text-muted-foreground">
+                  Browser notifications when app is minimized
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => {
+                if (!notificationSettings.desktopEnabled && "Notification" in window) {
+                  Notification.requestPermission().then((permission) => {
+                    if (permission === "granted") {
+                      setNotificationSettings({ desktopEnabled: true });
+                    }
+                  });
+                } else {
+                  setNotificationSettings({ desktopEnabled: !notificationSettings.desktopEnabled });
+                }
+              }}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                notificationSettings.desktopEnabled ? "bg-primary" : "bg-muted"
+              }`}
+            >
+              <span
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  notificationSettings.desktopEnabled ? "translate-x-6" : "translate-x-1"
                 }`}
               />
             </button>

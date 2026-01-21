@@ -70,7 +70,7 @@ export function ConversationHeader({
           </div>
         </button>
       </div>
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-2">
         <Button variant="ghost" size="icon" onClick={onSearch} className="h-8 w-8 rounded-lg border">
           <Search className="h-4 w-4" />
         </Button>

@@ -5,11 +5,13 @@ import { MessageCircle, Search, Bell, Settings, ChevronDown, LogOut, User } from
 import { Avatar } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/use-auth";
 import { useRouter } from "next/navigation";
+import { useChatStore } from "@/stores/chat-store";
 import { ProfileSettingsModal, SearchModal, NotificationSettingsModal } from "@/components/modals";
 
 export function TopNavbar() {
   const { user, logout } = useAuth();
   const router = useRouter();
+  const { unreadNotificationCount, resetUnreadCount } = useChatStore();
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showSearchModal, setShowSearchModal] = useState(false);
@@ -30,7 +32,7 @@ export function TopNavbar() {
         </div>
 
         {/* Right - Search, notifications, settings, user */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           {/* Search */}
           <button
             onClick={() => setShowSearchModal(true)}
@@ -45,10 +47,18 @@ export function TopNavbar() {
 
           {/* Notification bell */}
           <button
-            onClick={() => setShowNotificationModal(true)}
-            className="flex h-9 w-9 items-center justify-center rounded-lg border hover:bg-muted transition-colors"
+            onClick={() => {
+              setShowNotificationModal(true);
+              resetUnreadCount();
+            }}
+            className="relative flex h-9 w-9 items-center justify-center rounded-lg border hover:bg-muted transition-colors"
           >
             <Bell className="h-5 w-5 text-muted-foreground" />
+            {unreadNotificationCount > 0 && (
+              <span className="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-xs font-medium text-white">
+                {unreadNotificationCount > 99 ? "99+" : unreadNotificationCount}
+              </span>
+            )}
           </button>
 
           {/* Settings */}
