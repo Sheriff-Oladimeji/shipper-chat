@@ -1,10 +1,23 @@
 import { create } from "zustand";
 import type { User, Message, ConversationWithDetails } from "@/types";
 
+interface NotificationSettings {
+  soundEnabled: boolean;
+  inAppEnabled: boolean;
+  desktopEnabled: boolean;
+}
+
 interface ChatState {
   // Current user
   currentUser: User | null;
   setCurrentUser: (user: User | null) => void;
+
+  // Notifications
+  notificationSettings: NotificationSettings;
+  setNotificationSettings: (settings: Partial<NotificationSettings>) => void;
+  unreadNotificationCount: number;
+  incrementUnreadCount: () => void;
+  resetUnreadCount: () => void;
 
   // Conversations
   conversations: ConversationWithDetails[];
@@ -57,6 +70,21 @@ export const useChatStore = create<ChatState>((set, get) => ({
   // Current user
   currentUser: null,
   setCurrentUser: (user) => set({ currentUser: user }),
+
+  // Notifications
+  notificationSettings: {
+    soundEnabled: true,
+    inAppEnabled: true,
+    desktopEnabled: false,
+  },
+  setNotificationSettings: (settings) =>
+    set((state) => ({
+      notificationSettings: { ...state.notificationSettings, ...settings },
+    })),
+  unreadNotificationCount: 0,
+  incrementUnreadCount: () =>
+    set((state) => ({ unreadNotificationCount: state.unreadNotificationCount + 1 })),
+  resetUnreadCount: () => set({ unreadNotificationCount: 0 }),
 
   // Conversations
   conversations: [],
@@ -150,7 +178,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
         clearTimeout(state.typingTimeouts[timeoutKey]);
       }
 
-      let newTimeouts = { ...state.typingTimeouts };
+      const newTimeouts = { ...state.typingTimeouts };
 
       if (isTyping) {
         // Auto-clear typing after 5 seconds if no stop received

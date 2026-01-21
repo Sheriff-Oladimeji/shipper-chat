@@ -1,18 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   Sheet,
   SheetContent,
-  SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Phone, Video, FileText, Image, Link2, X, Loader2, ExternalLink } from "lucide-react";
-import type { User } from "@/types";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Phone, Video, FileText, Image, Link2, X } from "lucide-react";
+import type { User, LinkPreview } from "@/types";
 import { cn } from "@/lib/utils";
 
 interface ContactInfoPanelProps {
@@ -93,6 +93,84 @@ function getFullUrl(url: string): string {
     return url;
   }
   return `https://${url}`;
+}
+
+// Link Preview Card Component - matches Figma design (no preview image, just logo + description)
+function LinkPreviewCard({ url }: { url: string }) {
+  const [preview, setPreview] = useState<LinkPreview | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchPreview = async () => {
+      try {
+        const response = await fetch(`/api/link-preview?url=${encodeURIComponent(url)}`);
+        const data = await response.json();
+        if (data.success) {
+          setPreview(data.data);
+        }
+      } catch {
+        // Silently fail - will show basic preview
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchPreview();
+  }, [url]);
+
+  const fullUrl = getFullUrl(url);
+  const domain = extractDomain(url);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center gap-3 px-4 py-3 border-b">
+        <Skeleton className="h-11 w-11 rounded-xl shrink-0" />
+        <div className="flex-1 space-y-1.5">
+          <Skeleton className="h-4 w-32" />
+          <Skeleton className="h-3 w-full" />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <a
+      href={fullUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors border-b"
+    >
+      {/* Logo/Favicon - larger rounded square like app icon */}
+      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-muted overflow-hidden">
+        {preview?.favicon ? (
+          <img
+            src={preview.favicon}
+            alt=""
+            className="h-7 w-7 object-contain"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
+            }}
+          />
+        ) : (
+          <Link2 className="h-5 w-5 text-muted-foreground" />
+        )}
+      </div>
+
+      <div className="flex-1 min-w-0">
+        {/* URL as title */}
+        <p className="text-sm font-medium text-foreground truncate">
+          {fullUrl}
+        </p>
+
+        {/* Description */}
+        {preview?.description && (
+          <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
+            {preview.description}
+          </p>
+        )}
+      </div>
+    </a>
+  );
 }
 
 async function fetchConversationMedia(conversationId: string): Promise<ConversationMediaResponse["data"]> {
@@ -182,22 +260,22 @@ export function ContactInfoPanel({
           className="flex-1 flex flex-col overflow-hidden"
         >
           <div className="px-4 py-3 border-b">
-            <TabsList className="grid w-full grid-cols-3 bg-muted rounded-full h-10 p-1">
+            <TabsList className="inline-flex bg-muted rounded-full h-10 p-1">
               <TabsTrigger
                 value="media"
-                className="rounded-full text-sm font-medium data-[state=active]:bg-white data-[state=active]:text-foreground data-[state=active]:shadow-sm text-muted-foreground"
+                className="rounded-full px-4 text-sm font-medium data-[state=active]:bg-white data-[state=active]:text-foreground data-[state=active]:shadow-sm text-muted-foreground"
               >
                 Media
               </TabsTrigger>
               <TabsTrigger
                 value="link"
-                className="rounded-full text-sm font-medium data-[state=active]:bg-white data-[state=active]:text-foreground data-[state=active]:shadow-sm text-muted-foreground"
+                className="rounded-full px-4 text-sm font-medium data-[state=active]:bg-white data-[state=active]:text-foreground data-[state=active]:shadow-sm text-muted-foreground"
               >
                 Link
               </TabsTrigger>
               <TabsTrigger
                 value="docs"
-                className="rounded-full text-sm font-medium data-[state=active]:bg-white data-[state=active]:text-foreground data-[state=active]:shadow-sm text-muted-foreground"
+                className="rounded-full px-4 text-sm font-medium data-[state=active]:bg-white data-[state=active]:text-foreground data-[state=active]:shadow-sm text-muted-foreground"
               >
                 Docs
               </TabsTrigger>
@@ -210,8 +288,13 @@ export function ContactInfoPanel({
             className="flex-1 overflow-y-auto mt-0 p-0"
           >
             {isLoading ? (
-              <div className="flex items-center justify-center py-12">
-                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              <div>
+                <Skeleton className="h-6 w-16 mx-4 my-2" />
+                <div className="grid grid-cols-3 gap-0.5 p-0.5">
+                  {[...Array(9)].map((_, i) => (
+                    <Skeleton key={i} className="aspect-square" />
+                  ))}
+                </div>
               </div>
             ) : Object.keys(groupedMedia).length > 0 ? (
               Object.entries(groupedMedia).map(([month, items]) => (
@@ -263,30 +346,24 @@ export function ContactInfoPanel({
             className="flex-1 overflow-y-auto mt-0 p-0"
           >
             {isLoading ? (
-              <div className="flex items-center justify-center py-12">
-                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              <div>
+                {[...Array(4)].map((_, i) => (
+                  <div key={i} className="flex items-center gap-3 px-4 py-3 border-b">
+                    <Skeleton className="h-11 w-11 rounded-xl shrink-0" />
+                    <div className="flex-1 space-y-1.5">
+                      <Skeleton className="h-4 w-40" />
+                      <Skeleton className="h-3 w-full" />
+                    </div>
+                  </div>
+                ))}
               </div>
             ) : links.length > 0 ? (
-              <div className="divide-y">
+              <div>
                 {links.map((link) => (
-                  <a
+                  <LinkPreviewCard
                     key={link.id}
-                    href={getFullUrl(link.url)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-start gap-3 p-4 hover:bg-muted/50 transition-colors"
-                  >
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted">
-                      <Link2 className="h-5 w-5 text-muted-foreground" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{extractDomain(link.url)}</p>
-                      <p className="text-xs text-primary truncate mt-0.5">
-                        {link.url}
-                      </p>
-                    </div>
-                    <ExternalLink className="h-4 w-4 shrink-0 text-muted-foreground" />
-                  </a>
+                    url={link.url}
+                  />
                 ))}
               </div>
             ) : (
@@ -303,8 +380,16 @@ export function ContactInfoPanel({
             className="flex-1 overflow-y-auto mt-0 p-0"
           >
             {isLoading ? (
-              <div className="flex items-center justify-center py-12">
-                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              <div className="divide-y">
+                {[...Array(4)].map((_, i) => (
+                  <div key={i} className="flex items-center gap-3 p-4">
+                    <Skeleton className="h-10 w-10 rounded-lg shrink-0" />
+                    <div className="flex-1 space-y-1.5">
+                      <Skeleton className="h-4 w-3/4" />
+                      <Skeleton className="h-3 w-16" />
+                    </div>
+                  </div>
+                ))}
               </div>
             ) : docs.length > 0 ? (
               <div className="divide-y">

@@ -1,15 +1,16 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { Check, CheckCheck, Sparkles, Download, Play, Pause, Volume2, Clock } from "lucide-react";
-import type { Attachment } from "@/types";
+import type { Attachment, LinkPreview } from "@/types";
 import {
   ContextMenu,
   ContextMenuContent,
 } from "@/components/ui/context-menu";
 import { Avatar } from "@/components/ui/avatar";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface Reaction {
   emoji: string;
@@ -31,6 +32,8 @@ interface MessageBubbleProps {
   attachments?: Attachment[];
   reactions?: Reaction[];
   onReact?: (messageId: string, emoji: string) => void;
+  searchQuery?: string;
+  isHighlighted?: boolean;
 }
 
 // Quick reaction emojis
@@ -94,6 +97,127 @@ function parseMessageContent(content: string, isOwn: boolean): React.ReactNode {
   }
 
   return result;
+}
+
+// Extract first URL from content
+function extractFirstUrl(content: string): string | null {
+  const matches = content.match(urlRegex);
+  if (matches && matches.length > 0) {
+    const url = matches[0];
+    return url.startsWith("http") ? url : `https://${url}`;
+  }
+  return null;
+}
+
+// Link Preview Component for chat messages - compact version
+function MessageLinkPreview({ url, isOwn }: { url: string; isOwn: boolean }) {
+  const [preview, setPreview] = useState<LinkPreview | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [imageError, setImageError] = useState(false);
+
+  useEffect(() => {
+    const fetchPreview = async () => {
+      try {
+        const response = await fetch(`/api/link-preview?url=${encodeURIComponent(url)}`);
+        const data = await response.json();
+        if (data.success && data.data) {
+          setPreview(data.data);
+        }
+      } catch {
+        // Silently fail
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchPreview();
+  }, [url]);
+
+  if (isLoading) {
+    return (
+      <div className={cn(
+        "mt-2 rounded-lg overflow-hidden max-w-[280px]",
+        isOwn ? "bg-white/10" : "bg-black/5"
+      )}>
+        <Skeleton className="w-full h-24" />
+        <div className="p-2 space-y-1">
+          <Skeleton className="h-3 w-16" />
+          <Skeleton className="h-3.5 w-full" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!preview) return null;
+
+  const domain = new URL(url).hostname;
+
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+      onClick={(e) => e.stopPropagation()}
+      className={cn(
+        "mt-2 block rounded-lg overflow-hidden transition-opacity hover:opacity-90 max-w-[280px]",
+        isOwn ? "bg-white/10" : "bg-black/5"
+      )}
+    >
+      {/* Preview Image - reduced height */}
+      {preview.image && !imageError && (
+        <div className="w-full h-24 bg-muted">
+          <img
+            src={preview.image}
+            alt={preview.title || domain}
+            className="w-full h-full object-cover"
+            onError={() => setImageError(true)}
+          />
+        </div>
+      )}
+
+      <div className="p-2">
+        {/* Site name with favicon */}
+        <div className="flex items-center gap-1.5 mb-0.5">
+          {preview.favicon && (
+            <img
+              src={preview.favicon}
+              alt=""
+              className="h-3 w-3 object-contain"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = `https://www.google.com/s2/favicons?domain=${domain}&sz=32`;
+              }}
+            />
+          )}
+          <span className={cn(
+            "text-[10px] uppercase tracking-wide",
+            isOwn ? "text-white/60" : "text-muted-foreground"
+          )}>
+            {preview.siteName || domain}
+          </span>
+        </div>
+
+        {/* Title */}
+        {preview.title && (
+          <p className={cn(
+            "text-xs font-medium line-clamp-2",
+            isOwn ? "text-white" : "text-foreground"
+          )}>
+            {preview.title}
+          </p>
+        )}
+
+        {/* Description - single line */}
+        {preview.description && (
+          <p className={cn(
+            "text-[11px] mt-0.5 line-clamp-1",
+            isOwn ? "text-white/70" : "text-muted-foreground"
+          )}>
+            {preview.description}
+          </p>
+        )}
+      </div>
+    </a>
+  );
 }
 
 // Voice note player component
@@ -319,8 +443,34 @@ export function MessageBubble({
   attachments = [],
   reactions = [],
   onReact,
+  searchQuery,
+  isHighlighted = false,
 }: MessageBubbleProps) {
   const time = format(new Date(timestamp), "h:mm a");
+  const messageRef = useRef<HTMLDivElement>(null);
+
+  // Scroll to highlighted message
+  React.useEffect(() => {
+    if (isHighlighted && messageRef.current) {
+      messageRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [isHighlighted]);
+
+  // Highlight search matches in content
+  const renderHighlightedContent = (text: string) => {
+    if (!searchQuery || !text) return parseMessageContent(text, isOwn);
+
+    const regex = new RegExp(`(${searchQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+    const parts = text.split(regex);
+
+    return parts.map((part, i) =>
+      regex.test(part) ? (
+        <mark key={i} className="bg-yellow-300 text-black px-0.5 rounded">{part}</mark>
+      ) : (
+        <span key={i}>{part}</span>
+      )
+    );
+  };
   const hasAttachments = attachments && attachments.length > 0;
   const hasContent = content && content.trim().length > 0;
   const hasReactions = reactions && reactions.length > 0;
@@ -358,9 +508,11 @@ export function MessageBubble({
 
   return (
     <div
+      ref={messageRef}
       className={cn(
-        "flex w-full mb-2",
-        isOwn ? "justify-end" : "justify-start"
+        "flex w-full mb-2 transition-colors",
+        isOwn ? "justify-end" : "justify-start",
+        isHighlighted && "bg-yellow-100/50 -mx-2 px-2 py-1 rounded-lg"
       )}
     >
       <div className={cn(
@@ -408,7 +560,12 @@ export function MessageBubble({
               <p className={cn(
                 "text-sm whitespace-pre-wrap break-words",
                 hasAttachments && "px-2"
-              )}>{parseMessageContent(content, isOwn)}</p>
+              )}>{searchQuery ? renderHighlightedContent(content) : parseMessageContent(content, isOwn)}</p>
+            )}
+
+            {/* Link Preview */}
+            {hasContent && extractFirstUrl(content) && (
+              <MessageLinkPreview url={extractFirstUrl(content)!} isOwn={isOwn} />
             )}
 
             {/* Timestamp and read status */}

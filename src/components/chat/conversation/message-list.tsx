@@ -19,6 +19,8 @@ interface MessageListProps {
   typingUserNames: string[];
   isLoading?: boolean;
   onReact?: (messageId: string, emoji: string) => void;
+  searchQuery?: string;
+  highlightedMessageId?: string;
 }
 
 export function MessageList({
@@ -27,6 +29,8 @@ export function MessageList({
   typingUserNames,
   isLoading = false,
   onReact,
+  searchQuery,
+  highlightedMessageId,
 }: MessageListProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -133,6 +137,8 @@ export function MessageList({
                   userName: r.user?.name,
                 }))}
                 onReact={onReact}
+                searchQuery={searchQuery}
+                isHighlighted={message.id === highlightedMessageId}
               />
             </div>
           );
