@@ -4,14 +4,7 @@ import { useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useChatStore } from "@/stores/chat-store";
-
-interface User {
-  id: string;
-  email: string;
-  name: string;
-  image: string | null;
-  isOnline: boolean;
-}
+import type { User } from "@/types";
 
 async function fetchCurrentUser(): Promise<User> {
   const response = await fetch("/api/auth/me");
@@ -45,7 +38,7 @@ export function useAuth() {
   // Update store when user changes - use useEffect to avoid render loop
   useEffect(() => {
     if (user) {
-      setCurrentUser(user as any);
+      setCurrentUser(user);
     }
   }, [user, setCurrentUser]);
 

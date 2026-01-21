@@ -106,7 +106,7 @@ export default function AIChat() {
               className="rounded-full mb-4"
             />
             <h2 className="text-xl font-semibold text-foreground mb-2">
-              Hi, I'm Shipper AI
+              Hi, I&apos;m Shipper AI
             </h2>
             <p className="text-muted-foreground max-w-md">
               Ask me anything! I can help with questions, writing, analysis, and

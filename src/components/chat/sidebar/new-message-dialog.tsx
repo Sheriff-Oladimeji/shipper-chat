@@ -14,14 +14,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Search, Loader2 } from "lucide-react";
 import { useUsers } from "@/hooks/use-users";
 import Image from "next/image";
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  image: string | null;
-  isOnline: boolean;
-}
+import type { User } from "@/types";
 
 interface NewMessageDialogProps {
   open: boolean;

@@ -1,13 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-
-interface LinkPreview {
-  url: string;
-  title: string | null;
-  description: string | null;
-  image: string | null;
-  favicon: string | null;
-  siteName: string | null;
-}
+import type { LinkPreview } from "@/types";
 
 // Simple in-memory cache for link previews
 const cache = new Map<string, { data: LinkPreview; timestamp: number }>();
