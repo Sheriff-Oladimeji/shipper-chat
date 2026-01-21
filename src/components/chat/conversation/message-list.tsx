@@ -105,17 +105,20 @@ export function MessageList({
     );
   }
 
-  // Group messages by date
-  let lastDate: Date | null = null;
+  // Check if we should show date separator by comparing with previous message
+  const shouldShowDateSeparator = (index: number): boolean => {
+    if (index === 0) return true;
+    const currentDate = new Date(messages[index].createdAt);
+    const prevDate = new Date(messages[index - 1].createdAt);
+    return !isSameDay(currentDate, prevDate);
+  };
 
   return (
     <ScrollArea className="flex-1 px-4">
       <div className="py-4">
         {messages.map((message, index) => {
           const messageDate = new Date(message.createdAt);
-          const showDateSeparator =
-            !lastDate || !isSameDay(lastDate, messageDate);
-          lastDate = messageDate;
+          const showDateSeparator = shouldShowDateSeparator(index);
 
           return (
             <div key={message.id}>

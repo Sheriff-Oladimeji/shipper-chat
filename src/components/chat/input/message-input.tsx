@@ -428,13 +428,13 @@ export function MessageInput({
             <div className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
             <span className="text-sm font-medium">{formatRecordingTime(recordingTime)}</span>
             <div className="flex-1 flex items-center gap-0.5">
-              {/* Waveform visualization */}
+              {/* Waveform visualization - using sine wave pattern */}
               {[...Array(30)].map((_, i) => (
                 <div
                   key={i}
                   className="w-1 bg-gray-400 rounded-full animate-pulse"
                   style={{
-                    height: `${Math.random() * 16 + 4}px`,
+                    height: `${Math.sin(i * 0.5) * 8 + 12}px`,
                     animationDelay: `${i * 50}ms`,
                   }}
                 />

@@ -27,7 +27,6 @@ interface MessageBubbleProps {
   isDelivered?: boolean;
   isPending?: boolean;
   isAiGenerated?: boolean;
-  senderName?: string;
   senderImage?: string | null;
   attachments?: Attachment[];
   reactions?: Reaction[];
@@ -438,7 +437,6 @@ export function MessageBubble({
   isDelivered = false,
   isPending = false,
   isAiGenerated = false,
-  senderName,
   senderImage,
   attachments = [],
   reactions = [],

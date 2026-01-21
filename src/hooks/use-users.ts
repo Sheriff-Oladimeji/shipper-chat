@@ -1,15 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  image: string | null;
-  isOnline: boolean;
-  lastSeenAt: string;
-}
+import type { User } from "@/types";
 
 async function fetchUsers(): Promise<User[]> {
   const response = await fetch("/api/users");
