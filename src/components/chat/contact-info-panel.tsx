@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Phone, Video, FileText, Image, Link2, X, Loader2 } from "lucide-react";
+import { Phone, Video, FileText, Image, Link2, X } from "lucide-react";
 import type { User, LinkPreview } from "@/types";
 import { cn } from "@/lib/utils";
 
