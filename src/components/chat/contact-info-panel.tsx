@@ -5,7 +5,6 @@ import { useQuery } from "@tanstack/react-query";
 import {
   Sheet,
   SheetContent,
-  SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -182,22 +181,22 @@ export function ContactInfoPanel({
           className="flex-1 flex flex-col overflow-hidden"
         >
           <div className="px-4 py-3 border-b">
-            <TabsList className="grid w-full grid-cols-3 bg-muted rounded-full h-10 p-1">
+            <TabsList className="inline-flex bg-muted rounded-full h-10 p-1">
               <TabsTrigger
                 value="media"
-                className="rounded-full text-sm font-medium data-[state=active]:bg-white data-[state=active]:text-foreground data-[state=active]:shadow-sm text-muted-foreground"
+                className="rounded-full px-4 text-sm font-medium data-[state=active]:bg-white data-[state=active]:text-foreground data-[state=active]:shadow-sm text-muted-foreground"
               >
                 Media
               </TabsTrigger>
               <TabsTrigger
                 value="link"
-                className="rounded-full text-sm font-medium data-[state=active]:bg-white data-[state=active]:text-foreground data-[state=active]:shadow-sm text-muted-foreground"
+                className="rounded-full px-4 text-sm font-medium data-[state=active]:bg-white data-[state=active]:text-foreground data-[state=active]:shadow-sm text-muted-foreground"
               >
                 Link
               </TabsTrigger>
               <TabsTrigger
                 value="docs"
-                className="rounded-full text-sm font-medium data-[state=active]:bg-white data-[state=active]:text-foreground data-[state=active]:shadow-sm text-muted-foreground"
+                className="rounded-full px-4 text-sm font-medium data-[state=active]:bg-white data-[state=active]:text-foreground data-[state=active]:shadow-sm text-muted-foreground"
               >
                 Docs
               </TabsTrigger>
