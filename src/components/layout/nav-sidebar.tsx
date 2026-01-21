@@ -78,7 +78,7 @@ export function NavSidebar({ onOpenSettings }: NavSidebarProps) {
           </button>
 
           {showLogoMenu && (
-            <div className="absolute top-0 left-12 z-50 w-64 rounded-xl border bg-[#F3F3EE] shadow-lg overflow-hidden">
+            <div className="absolute top-0 left-12 z-50 w-64 rounded-xl border bg-white shadow-lg overflow-hidden">
               {/* Navigation options */}
               <div className="p-1 border-b">
                 <button
@@ -223,7 +223,7 @@ export function NavSidebar({ onOpenSettings }: NavSidebarProps) {
           )}
 
           {showProfileMenu && (
-            <div className="absolute bottom-0 left-12 z-50 w-48 rounded-xl border bg-[#F3F3EE] shadow-lg overflow-hidden">
+            <div className="absolute bottom-0 left-12 z-50 w-48 rounded-xl border bg-white shadow-lg overflow-hidden">
               <div className="p-1">
                 <button
                   onClick={() => {
