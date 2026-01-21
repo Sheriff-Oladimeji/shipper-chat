@@ -31,6 +31,8 @@ interface MessageBubbleProps {
   attachments?: Attachment[];
   reactions?: Reaction[];
   onReact?: (messageId: string, emoji: string) => void;
+  searchQuery?: string;
+  isHighlighted?: boolean;
 }
 
 // Quick reaction emojis
@@ -319,8 +321,34 @@ export function MessageBubble({
   attachments = [],
   reactions = [],
   onReact,
+  searchQuery,
+  isHighlighted = false,
 }: MessageBubbleProps) {
   const time = format(new Date(timestamp), "h:mm a");
+  const messageRef = useRef<HTMLDivElement>(null);
+
+  // Scroll to highlighted message
+  React.useEffect(() => {
+    if (isHighlighted && messageRef.current) {
+      messageRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [isHighlighted]);
+
+  // Highlight search matches in content
+  const renderHighlightedContent = (text: string) => {
+    if (!searchQuery || !text) return parseMessageContent(text, isOwn);
+
+    const regex = new RegExp(`(${searchQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+    const parts = text.split(regex);
+
+    return parts.map((part, i) =>
+      regex.test(part) ? (
+        <mark key={i} className="bg-yellow-300 text-black px-0.5 rounded">{part}</mark>
+      ) : (
+        <span key={i}>{part}</span>
+      )
+    );
+  };
   const hasAttachments = attachments && attachments.length > 0;
   const hasContent = content && content.trim().length > 0;
   const hasReactions = reactions && reactions.length > 0;
@@ -358,9 +386,11 @@ export function MessageBubble({
 
   return (
     <div
+      ref={messageRef}
       className={cn(
-        "flex w-full mb-2",
-        isOwn ? "justify-end" : "justify-start"
+        "flex w-full mb-2 transition-colors",
+        isOwn ? "justify-end" : "justify-start",
+        isHighlighted && "bg-yellow-100/50 -mx-2 px-2 py-1 rounded-lg"
       )}
     >
       <div className={cn(
@@ -408,7 +438,7 @@ export function MessageBubble({
               <p className={cn(
                 "text-sm whitespace-pre-wrap break-words",
                 hasAttachments && "px-2"
-              )}>{parseMessageContent(content, isOwn)}</p>
+              )}>{searchQuery ? renderHighlightedContent(content) : parseMessageContent(content, isOwn)}</p>
             )}
 
             {/* Timestamp and read status */}

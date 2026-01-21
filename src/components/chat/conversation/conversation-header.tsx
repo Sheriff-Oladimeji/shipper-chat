@@ -2,7 +2,7 @@
 
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Phone, Video, MoreVertical, ArrowLeft } from "lucide-react";
+import { Search, Phone, Video, MoreVertical, ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { formatDistanceToNow } from "date-fns";
 
@@ -13,6 +13,7 @@ interface ConversationHeaderProps {
   lastSeenAt?: Date | string | null;
   onBack?: () => void;
   onOpenContactInfo?: () => void;
+  onSearch?: () => void;
 }
 
 export function ConversationHeader({
@@ -22,6 +23,7 @@ export function ConversationHeader({
   lastSeenAt,
   onBack,
   onOpenContactInfo,
+  onSearch,
 }: ConversationHeaderProps) {
   const router = useRouter();
 
@@ -69,14 +71,17 @@ export function ConversationHeader({
         </button>
       </div>
       <div className="flex items-center gap-1">
-        <Button variant="ghost" size="icon">
-          <Phone className="h-5 w-5" />
+        <Button variant="ghost" size="icon" onClick={onSearch} className="h-8 w-8 rounded-lg border">
+          <Search className="h-4 w-4" />
         </Button>
-        <Button variant="ghost" size="icon">
-          <Video className="h-5 w-5" />
+        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg border">
+          <Phone className="h-4 w-4" />
         </Button>
-        <Button variant="ghost" size="icon" onClick={onOpenContactInfo}>
-          <MoreVertical className="h-5 w-5" />
+        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg border">
+          <Video className="h-4 w-4" />
+        </Button>
+        <Button variant="ghost" size="icon" onClick={onOpenContactInfo} className="h-8 w-8 rounded-lg border">
+          <MoreVertical className="h-4 w-4" />
         </Button>
       </div>
     </header>
