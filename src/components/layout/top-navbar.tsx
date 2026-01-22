@@ -24,7 +24,7 @@ export function TopNavbar() {
 
   return (
     <>
-      <div className="p-3 pb-0 bg-[#F3F3EE]">
+      <div className="px-3 pt-2 pb-0 bg-[#F3F3EE]">
       <header className="flex h-14 items-center justify-between rounded-2xl bg-card px-4">
         {/* Left - Message title */}
         <div className="flex items-center gap-2">

@@ -61,7 +61,7 @@ export function NavSidebar({ onOpenSettings }: NavSidebarProps) {
 
   return (
     <>
-      <aside className="flex h-full w-14 flex-col items-center border-r bg-background py-4">
+      <aside className="flex h-full w-14 flex-col items-center border-r bg-[#F3F3EE] py-4">
         {/* Logo with dropdown */}
         <div className="relative mb-4" ref={logoMenuRef}>
           <button
