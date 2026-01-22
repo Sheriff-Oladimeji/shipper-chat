@@ -32,16 +32,16 @@ export function TopNavbar() {
         </div>
 
         {/* Right - Search, notifications, settings, user */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           {/* Search */}
           <button
             onClick={() => setShowSearchModal(true)}
-            className="flex items-center gap-2 rounded-lg border bg-muted/50 px-3 py-1.5 text-sm text-muted-foreground hover:bg-muted transition-colors"
+            className="flex items-center gap-2 rounded-lg border border-[#E8E5DF] bg-white pl-4 pr-1 py-1.5 text-sm hover:bg-gray-50 transition-colors min-w-70"
           >
-            <Search className="h-4 w-4" />
-            <span>Search</span>
-            <kbd className="ml-8 pointer-events-none hidden h-5 select-none items-center gap-1 rounded border bg-background px-1.5 font-mono text-[10px] font-medium opacity-100 sm:flex">
-              <span className="text-xs">⌘</span>K
+            <Search className="h-4 w-4 text-gray-400" />
+            <span className="flex-1 text-left text-gray-400">Search</span>
+            <kbd className="pointer-events-none flex h-6 select-none items-center rounded bg-gray-100 px-1.5 font-mono text-sm text-gray-500">
+              ⌘+K
             </kbd>
           </button>
 
@@ -51,11 +51,11 @@ export function TopNavbar() {
               setShowNotificationModal(true);
               resetUnreadCount();
             }}
-            className="relative flex h-9 w-9 items-center justify-center rounded-lg border hover:bg-muted transition-colors"
+            className="relative flex h-8 w-8 items-center justify-center rounded-lg border border-[#E8E5DF] hover:bg-gray-100 transition-colors"
           >
-            <Bell className="h-5 w-5 text-muted-foreground" />
+            <Bell className="h-5 w-5 text-gray-700" />
             {unreadNotificationCount > 0 && (
-              <span className="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-xs font-medium text-white">
+              <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-medium text-white">
                 {unreadNotificationCount > 99 ? "99+" : unreadNotificationCount}
               </span>
             )}
@@ -64,19 +64,19 @@ export function TopNavbar() {
           {/* Settings */}
           <button
             onClick={() => setShowProfileModal(true)}
-            className="flex h-9 w-9 items-center justify-center rounded-lg border hover:bg-muted transition-colors"
+            className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#E8E5DF] hover:bg-gray-100 transition-colors"
           >
-            <Settings className="h-5 w-5 text-muted-foreground" />
+            <Settings className="h-5 w-5 text-gray-700" />
           </button>
 
           {/* Divider */}
-          <div className="h-6 w-px bg-border mx-1" />
+          <div className="h-6 w-px bg-gray-200 mx-1" />
 
           {/* User menu */}
           <div className="relative">
             <button
               onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-              className="flex items-center gap-1 rounded-lg p-1 hover:bg-muted transition-colors"
+              className="flex items-center gap-1 rounded-lg p-0.5 hover:bg-gray-100 transition-colors"
             >
               <Avatar
                 src={user?.image}
