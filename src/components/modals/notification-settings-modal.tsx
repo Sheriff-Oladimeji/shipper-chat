@@ -2,6 +2,7 @@
 
 import { X, Bell, BellOff, Volume2, VolumeX, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import { useChatStore } from "@/stores/chat-store";
 
 interface NotificationSettingsModalProps {
@@ -50,18 +51,10 @@ export function NotificationSettingsModal({ open, onOpenChange }: NotificationSe
                 </p>
               </div>
             </div>
-            <button
-              onClick={() => setNotificationSettings({ inAppEnabled: !notificationSettings.inAppEnabled })}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                notificationSettings.inAppEnabled ? "bg-primary" : "bg-muted"
-              }`}
-            >
-              <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  notificationSettings.inAppEnabled ? "translate-x-6" : "translate-x-1"
-                }`}
-              />
-            </button>
+            <Switch
+              checked={notificationSettings.inAppEnabled}
+              onCheckedChange={(checked) => setNotificationSettings({ inAppEnabled: checked })}
+            />
           </div>
 
           {/* Sound toggle */}
@@ -79,18 +72,10 @@ export function NotificationSettingsModal({ open, onOpenChange }: NotificationSe
                 </p>
               </div>
             </div>
-            <button
-              onClick={() => setNotificationSettings({ soundEnabled: !notificationSettings.soundEnabled })}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                notificationSettings.soundEnabled ? "bg-primary" : "bg-muted"
-              }`}
-            >
-              <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  notificationSettings.soundEnabled ? "translate-x-6" : "translate-x-1"
-                }`}
-              />
-            </button>
+            <Switch
+              checked={notificationSettings.soundEnabled}
+              onCheckedChange={(checked) => setNotificationSettings({ soundEnabled: checked })}
+            />
           </div>
 
           {/* Desktop notifications toggle */}
@@ -108,28 +93,20 @@ export function NotificationSettingsModal({ open, onOpenChange }: NotificationSe
                 </p>
               </div>
             </div>
-            <button
-              onClick={() => {
-                if (!notificationSettings.desktopEnabled && "Notification" in window) {
+            <Switch
+              checked={notificationSettings.desktopEnabled}
+              onCheckedChange={(checked) => {
+                if (checked && "Notification" in window) {
                   Notification.requestPermission().then((permission) => {
                     if (permission === "granted") {
                       setNotificationSettings({ desktopEnabled: true });
                     }
                   });
                 } else {
-                  setNotificationSettings({ desktopEnabled: !notificationSettings.desktopEnabled });
+                  setNotificationSettings({ desktopEnabled: checked });
                 }
               }}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                notificationSettings.desktopEnabled ? "bg-primary" : "bg-muted"
-              }`}
-            >
-              <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  notificationSettings.desktopEnabled ? "translate-x-6" : "translate-x-1"
-                }`}
-              />
-            </button>
+            />
           </div>
         </div>
 
