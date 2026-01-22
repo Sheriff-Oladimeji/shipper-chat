@@ -24,7 +24,8 @@ export function TopNavbar() {
 
   return (
     <>
-      <header className="flex h-14 items-center justify-between border-b bg-card px-4">
+      <div className="px-3 pt-2 pb-0 bg-[#F3F3EE]">
+      <header className="flex h-14 items-center justify-between rounded-2xl bg-card px-4">
         {/* Left - Message title */}
         <div className="flex items-center gap-2">
           <MessageCircle className="h-5 w-5 text-muted-foreground" />
@@ -125,6 +126,7 @@ export function TopNavbar() {
           </div>
         </div>
       </header>
+      </div>
 
       {/* Modals */}
       <ProfileSettingsModal
